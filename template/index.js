@@ -40,6 +40,7 @@ export default function({ asyncapi, params }) {
         </Body>
       </HTML>
     </File>
+    <File name="test.mustache"></File>
   );
 }
 

@@ -1,0 +1,30 @@
+{{>licenseInfo}}
+#pragma once
+
+#include "CoreMinimal.h"
+#include "{{modelNamePrefix}}BaseModel.h"
+
+{{#cppNamespaceDeclarations}}
+namespace {{this}}
+{
+{{/cppNamespaceDeclarations}}
+
+class {{dllapi}} {{classname}}
+{
+public:
+	{{classname}}();
+	~{{classname}}();
+
+	bool ProcessEvent(const FString& InEventString) const;
+	bool ProcessEvent(const TSharedRef<FJsonObject>& InEventJson) const;
+
+    {{#operations}}{{#operation}}DECLARE_DELEGATE_OneParam(F{{operationIdCamelCase}}Delegate, const {{operationIdCamelCase}}&);
+    {{/operation}}{{/operations}}
+    {{#operations}}{{#operation}}{{#description}}/* {{{.}}} */
+	{{/description}}void PublishEvent(const {{operationIdCamelCase}}&) const;
+    {{/operation}}{{/operations}}
+};
+
+{{#cppNamespaceDeclarations}}
+}
+{{/cppNamespaceDeclarations}}

@@ -1,0 +1,44 @@
+{{>licenseInfo}}
+#include "{{classname}}.h"
+
+#include "{{classname}}Operations.h"
+#include "{{unrealModuleName}}Module.h"
+
+#include "Serialization/JsonSerializer.h"
+
+{{#cppNamespaceDeclarations}}
+namespace {{this}}
+{
+{{/cppNamespaceDeclarations}}
+
+{{classname}}::{{classname}}()
+: Url(TEXT("{{basePath}}"))
+{
+}
+
+{{classname}}::~{{classname}}() {}
+
+bool {{classname}}::ProcessEvent(const FString& InEventString) const
+{
+	return false; // TODO parse into json
+}
+
+bool {{classname}}::ProcessEvent(const TSharedRef<FJsonObject>& InEventJson) const
+{
+	DW_ASSERT(a_eventJson);
+
+	// TODO: implement this part !
+}
+
+{{#operations}}
+{{#operation}}
+void {{classname}}::PublishEvent(const {{operationIdCamelCase}}& Event) const
+{
+	// TODO: implement this part !
+}
+
+{{/operation}}
+{{/operations}}
+{{#cppNamespaceDeclarations}}
+}
+{{/cppNamespaceDeclarations}}

@@ -6,9 +6,6 @@
 #include "Serialization/JsonSerializer.h"
 #include "Dom/JsonObject.h"
 #include "Misc/Base64.h"
-#include "PlatformHttp.h"
-
-class IHttpRequest;
 
 {{#cppNamespaceDeclarations}}
 namespace {{this}}
@@ -18,81 +15,6 @@ namespace {{this}}
 typedef TSharedRef<TJsonWriter<>> JsonWriter;
 
 //////////////////////////////////////////////////////////////////////////
-
-class {{dllapi}} HttpFileInput
-{
-public:
-	explicit HttpFileInput(const TCHAR* InFilePath);
-	explicit HttpFileInput(const FString& InFilePath);
-
-	// This will automatically set the content type if not already set
-    void SetFilePath(const TCHAR* InFilePath);
-	void SetFilePath(const FString& InFilePath);
-
-    // Optional if it can be deduced from the FilePath
-    void SetContentType(const TCHAR* ContentType);
-
-	HttpFileInput& operator=(const HttpFileInput& Other) = default;
-	HttpFileInput& operator=(const FString& InFilePath) { SetFilePath(*InFilePath); return*this; }
-	HttpFileInput& operator=(const TCHAR* InFilePath) { SetFilePath(InFilePath); return*this; }
-
-	const FString& GetFilePath() const { return FilePath; }
-	const FString& GetContentType() const { return ContentType; }
-
-	// Returns the filename with extension
-	FString GetFilename() const;
-
-private:
-    FString FilePath;
-    FString ContentType;
-};
-
-//////////////////////////////////////////////////////////////////////////
-
-class HttpMultipartFormData
-{
-public:
-	void SetBoundary(const TCHAR* InBoundary);
-	void SetupHttpRequest(const FHttpRequestRef& HttpRequest);
-
-	void AddStringPart(const TCHAR* Name, const TCHAR* Data);
-	void AddJsonPart(const TCHAR* Name, const FString& JsonString);
-	void AddBinaryPart(const TCHAR* Name, const TArray<uint8>& ByteArray);
-	void AddFilePart(const TCHAR* Name, const HttpFileInput& File);
-
-private:
-	void AppendString(const TCHAR* Str);
-	const FString& GetBoundary() const;
-
-	mutable FString Boundary;
-	TArray<uint8> FormData;
-
-	static const TCHAR* Delimiter;
-	static const TCHAR* Newline;
-};
-
-//////////////////////////////////////////////////////////////////////////
-
-// Decodes Base64Url encoded strings, see https://en.wikipedia.org/wiki/Base64#Variants_summary_table
-template<typename T>
-bool Base64UrlDecode(const FString& Base64String, T& Value)
-{
-	FString TmpCopy(Base64String);
-	TmpCopy.ReplaceInline(TEXT("-"), TEXT("+"));
-	TmpCopy.ReplaceInline(TEXT("_"), TEXT("/"));
-
-	return FBase64::Decode(TmpCopy, Value);
-}
-
-// Encodes strings in Base64Url, see https://en.wikipedia.org/wiki/Base64#Variants_summary_table
-template<typename T>
-FString Base64UrlEncode(const T& Value)
-{
-	FString Base64String = FBase64::Encode(Value);
-	Base64String.ReplaceInline(TEXT("+"), TEXT("-"));
-	Base64String.ReplaceInline(TEXT("/"), TEXT("_"));
-	return Base64String;
-}
 
 template<typename T>
 inline auto ToString(const T& Value)
@@ -130,71 +52,6 @@ inline FString ToString(const FGuid& Value)
 inline FString ToString(const TArray<uint8>& Value)
 {
 	return FBase64::Encode(Value);
-}
-
-template<typename T>
-inline FString ToUrlString(const T& Value)
-{
-	return FPlatformHttp::UrlEncode(ToString(Value));
-}
-
-inline FString ToUrlString(const TArray<uint8>& Value)
-{
-	return Base64UrlEncode(Value);
-}
-
-template<typename T>
-inline FString CollectionToUrlString(const TArray<T>& Collection, const TCHAR* Separator)
-{
-	FString Output;
-	if(Collection.Num() == 0)
-		return Output;
-
-	Output += ToUrlString(Collection[0]);
-	for(int i = 1; i < Collection.Num(); i++)
-	{
-		Output += FString::Format(TEXT("{0}{1}"), { Separator, *ToUrlString(Collection[i]) });
-	}
-	return Output;
-}
-
-template<typename T>
-inline FString CollectionToUrlString_csv(const TArray<T>& Collection, const TCHAR* BaseName)
-{
-	return CollectionToUrlString(Collection, TEXT(","));
-}
-
-template<typename T>
-inline FString CollectionToUrlString_ssv(const TArray<T>& Collection, const TCHAR* BaseName)
-{
-	return CollectionToUrlString(Collection, TEXT(" "));
-}
-
-template<typename T>
-inline FString CollectionToUrlString_tsv(const TArray<T>& Collection, const TCHAR* BaseName)
-{
-	return CollectionToUrlString(Collection, TEXT("\t"));
-}
-
-template<typename T>
-inline FString CollectionToUrlString_pipes(const TArray<T>& Collection, const TCHAR* BaseName)
-{
-	return CollectionToUrlString(Collection, TEXT("|"));
-}
-
-template<typename T>
-inline FString CollectionToUrlString_multi(const TArray<T>& Collection, const TCHAR* BaseName)
-{
-	FString Output;
-	if(Collection.Num() == 0)
-		return Output;
-
-	Output += FString::Format(TEXT("{0}={1}"), { FStringFormatArg(BaseName), ToUrlString(Collection[0]) });
-	for(int i = 1; i < Collection.Num(); i++)
-	{
-		Output += FString::Format(TEXT("&{0}={1}"), { FStringFormatArg(BaseName), ToUrlString(Collection[i]) });
-	}
-	return Output;
 }
 
 //////////////////////////////////////////////////////////////////////////
