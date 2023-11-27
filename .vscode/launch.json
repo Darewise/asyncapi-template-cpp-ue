@@ -1,0 +1,22 @@
+{
+    // react generator template launch config from here: https://www.asyncapi.com/docs/tools/generator/react-render-engine#debugging-react-template-in-vscode
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "type": "node",
+        "request": "launch",
+        "name": "Debug template",
+        "timeout": 10000,
+        "sourceMaps": true,
+        "args": [
+          "./test/fixtures/dummy.yml",
+          "./template",
+          "--output",
+          "./output",
+          "--install",
+          "--force-write"
+        ],
+        "program": "ag"
+      }
+    ]
+  }
