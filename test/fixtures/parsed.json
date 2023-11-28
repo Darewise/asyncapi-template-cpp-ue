@@ -1,0 +1,1136 @@
+AsyncAPIDocument {
+  _json: {
+    asyncapi: '2.0.0',
+    externalDocs: {
+      description: 'Find more info here',
+      url: 'https://www.asyncapi.com'
+    },
+    info: {
+      title: 'Dummy example with all spec features included',
+      version: '0.0.1',
+      description: 'This is an example of AsyncAPI specification file that is suppose to include all possible features of the AsyncAPI specification. Do not use it on production.\n' +
+        '\n' +
+        "It's goal is to support development of documentation and code generation with the [AsyncAPI Generator](https://github.com/asyncapi/generator/) and [Template projects](https://github.com/search?q=topic%3Aasyncapi+topic%3Agenerator+topic%3Atemplate)\n",
+      license: {
+        name: 'Apache 2.0',
+        url: 'https://www.apache.org/licenses/LICENSE-2.0'
+      },
+      contact: {
+        name: 'API Support',
+        url: 'http://www.asyncapi.com/support',
+        email: 'info@asyncapi.io'
+      },
+      'x-twitter': '@AsyncAPISpec'
+    },
+    tags: [
+      {
+        name: 'root-tag1',
+        externalDocs: {
+          description: 'External docs description 1',
+          url: 'https://www.asyncapi.com/'
+        }
+      },
+      {
+        name: 'root-tag2',
+        description: 'Description 2',
+        externalDocs: { url: 'https://www.asyncapi.com/' }
+      },
+      { name: 'root-tag3' },
+      { name: 'root-tag4', description: 'Description 4' },
+      {
+        name: 'root-tag5',
+        externalDocs: { url: 'https://www.asyncapi.com/' }
+      }
+    ],
+    servers: {
+      'dummy-mqtt': {
+        url: 'mqtt://localhost',
+        protocol: 'mqtt',
+        description: 'dummy MQTT broker',
+        bindings: { mqtt: { clientId: 'guest', cleanSession: true } }
+      },
+      'dummy-amqp': {
+        url: 'amqp://localhost:{port}',
+        protocol: 'amqp',
+        description: 'dummy AMQP broker',
+        protocolVersion: '0.9.1',
+        variables: { port: { enum: [ '15672', '5672' ] } },
+        security: [ { 'user-password': [] } ]
+      },
+      'dommy-kafka': {
+        url: 'http://localhost:{port}',
+        protocol: 'kafka',
+        description: 'dummy Kafka broker',
+        variables: { port: { default: '9092' } }
+      }
+    },
+    defaultContentType: 'application/json',
+    channels: {
+      'dummy/channel/with/{dummy}/parameter/create': {
+        description: 'Dummy channel description.',
+        parameters: {
+          dummy: {
+            description: 'The ID of the new dummy message.',
+            schema: {
+              type: 'string',
+              description: 'Description that not be rendered, as parameter has explicit description.',
+              'x-parser-schema-id': 'dummy'
+            }
+          }
+        },
+        publish: {
+          summary: 'Inform whenever something dummy is created.',
+          description: 'Longer description.\n\nStill dummy though.\n',
+          operationId: 'receiveNewDummyInfo',
+          tags: [
+            {
+              name: 'oparation-tag1',
+              externalDocs: {
+                description: 'External docs description 1',
+                url: 'https://www.asyncapi.com/'
+              }
+            },
+            {
+              name: 'oparation-tag2',
+              description: 'Description 2',
+              externalDocs: { url: 'https://www.asyncapi.com/' }
+            },
+            { name: 'oparation-tag3' },
+            { name: 'oparation-tag4', description: 'Description 4' },
+            {
+              name: 'oparation-tag5',
+              externalDocs: { url: 'https://www.asyncapi.com/' }
+            }
+          ],
+          message: {
+            name: 'dummyCreated',
+            title: 'Dummy created message',
+            summary: 'This is just a dummy create message',
+            correlationId: {
+              description: 'This is a dummy correlation ID.',
+              location: '$message.header#/correlationId'
+            },
+            tags: [
+              {
+                name: 'message-tag1',
+                externalDocs: {
+                  description: 'External docs description 1',
+                  url: 'https://www.asyncapi.com/'
+                }
+              },
+              {
+                name: 'message-tag2',
+                description: 'Description 2',
+                externalDocs: { url: 'https://www.asyncapi.com/' }
+              },
+              { name: 'message-tag3' },
+              { name: 'message-tag4', description: 'Description 4' },
+              {
+                name: 'message-tag5',
+                externalDocs: { url: 'https://www.asyncapi.com/' }
+              }
+            ],
+            headers: {
+              type: 'object',
+              properties: {
+                'my-custom-app-header': {
+                  type: 'string',
+                  'x-parser-schema-id': '<anonymous-schema-2>'
+                },
+                correlationId: {
+                  type: 'string',
+                  'x-parser-schema-id': '<anonymous-schema-3>'
+                }
+              },
+              'x-parser-schema-id': '<anonymous-schema-1>'
+            },
+            payload: {
+              type: 'object',
+              required: [ 'prop2' ],
+              properties: {
+                prop1: {
+                  type: 'integer',
+                  minimum: 0,
+                  description: 'Dummy prop1',
+                  'x-parser-schema-id': '<anonymous-schema-4>'
+                },
+                prop2: {
+                  type: 'string',
+                  description: 'Dummy prop2',
+                  'x-parser-schema-id': '<anonymous-schema-5>'
+                },
+                sentAt: {
+                  type: 'string',
+                  format: 'date-time',
+                  description: 'Date and time when the message was sent.',
+                  'x-parser-schema-id': 'sentAt'
+                },
+                dummyArrayWithObject: {
+                  type: 'array',
+                  items: {
+                    type: 'object',
+                    required: [ 'prop1' ],
+                    properties: {
+                      prop1: {
+                        type: 'string',
+                        enum: [ 'option1', 'option2' ],
+                        description: 'Dummy prop1',
+                        'x-parser-schema-id': '<anonymous-schema-6>'
+                      },
+                      sentAt: {
+                        type: 'string',
+                        format: 'date-time',
+                        description: 'Date and time when the message was sent.',
+                        'x-parser-schema-id': 'sentAt'
+                      }
+                    },
+                    'x-parser-schema-id': 'dummyInfo'
+                  },
+                  'x-parser-schema-id': 'dummyArrayWithObject'
+                },
+                dummyArrayWithArray: {
+                  type: 'array',
+                  items: [
+                    {
+                      type: 'object',
+                      required: [ 'prop1' ],
+                      properties: {
+                        prop1: {
+                          type: 'string',
+                          enum: [ 'option1', 'option2' ],
+                          description: 'Dummy prop1',
+                          'x-parser-schema-id': '<anonymous-schema-6>'
+                        },
+                        sentAt: {
+                          type: 'string',
+                          format: 'date-time',
+                          description: 'Date and time when the message was sent.',
+                          'x-parser-schema-id': 'sentAt'
+                        }
+                      },
+                      'x-parser-schema-id': 'dummyInfo'
+                    },
+                    {
+                      type: 'string',
+                      'x-parser-schema-id': '<anonymous-schema-7>'
+                    },
+                    {
+                      type: 'number',
+                      'x-parser-schema-id': '<anonymous-schema-8>'
+                    }
+                  ],
+                  'x-parser-schema-id': 'dummyArrayWithArray'
+                },
+                dummyObject: <ref *1> {
+                  type: 'object',
+                  properties: {
+                    dummyObjectProp1: {
+                      type: 'string',
+                      format: 'date-time',
+                      description: 'Date and time when the message was sent.',
+                      'x-parser-schema-id': 'sentAt'
+                    },
+                    dummyObjectProp2: {
+                      type: 'object',
+                      properties: {
+                        dummyRecursiveProp1: [Circular *1],
+                        dummyRecursiveProp2: {
+                          type: 'string',
+                          'x-parser-schema-id': '<anonymous-schema-9>'
+                        }
+                      },
+                      'x-parser-schema-id': 'dummyRecursiveObject'
+                    }
+                  },
+                  'x-parser-schema-id': 'dummyObject'
+                }
+              },
+              'x-parser-schema-id': 'dummyCreated'
+            },
+            'x-parser-original-schema-format': 'application/vnd.aai.asyncapi;version=2.0.0',
+            schemaFormat: 'application/vnd.aai.asyncapi;version=2.0.0',
+            'x-parser-original-payload': {
+              type: 'object',
+              required: [ 'prop2' ],
+              properties: {
+                prop1: {
+                  type: 'integer',
+                  minimum: 0,
+                  description: 'Dummy prop1',
+                  'x-parser-schema-id': '<anonymous-schema-4>'
+                },
+                prop2: {
+                  type: 'string',
+                  description: 'Dummy prop2',
+                  'x-parser-schema-id': '<anonymous-schema-5>'
+                },
+                sentAt: {
+                  type: 'string',
+                  format: 'date-time',
+                  description: 'Date and time when the message was sent.',
+                  'x-parser-schema-id': 'sentAt'
+                },
+                dummyArrayWithObject: {
+                  type: 'array',
+                  items: {
+                    type: 'object',
+                    required: [ 'prop1' ],
+                    properties: {
+                      prop1: {
+                        type: 'string',
+                        enum: [ 'option1', 'option2' ],
+                        description: 'Dummy prop1',
+                        'x-parser-schema-id': '<anonymous-schema-6>'
+                      },
+                      sentAt: {
+                        type: 'string',
+                        format: 'date-time',
+                        description: 'Date and time when the message was sent.',
+                        'x-parser-schema-id': 'sentAt'
+                      }
+                    },
+                    'x-parser-schema-id': 'dummyInfo'
+                  },
+                  'x-parser-schema-id': 'dummyArrayWithObject'
+                },
+                dummyArrayWithArray: {
+                  type: 'array',
+                  items: [
+                    {
+                      type: 'object',
+                      required: [ 'prop1' ],
+                      properties: {
+                        prop1: {
+                          type: 'string',
+                          enum: [ 'option1', 'option2' ],
+                          description: 'Dummy prop1',
+                          'x-parser-schema-id': '<anonymous-schema-6>'
+                        },
+                        sentAt: {
+                          type: 'string',
+                          format: 'date-time',
+                          description: 'Date and time when the message was sent.',
+                          'x-parser-schema-id': 'sentAt'
+                        }
+                      },
+                      'x-parser-schema-id': 'dummyInfo'
+                    },
+                    {
+                      type: 'string',
+                      'x-parser-schema-id': '<anonymous-schema-7>'
+                    },
+                    {
+                      type: 'number',
+                      'x-parser-schema-id': '<anonymous-schema-8>'
+                    }
+                  ],
+                  'x-parser-schema-id': 'dummyArrayWithArray'
+                },
+                dummyObject: <ref *1> {
+                  type: 'object',
+                  properties: {
+                    dummyObjectProp1: {
+                      type: 'string',
+                      format: 'date-time',
+                      description: 'Date and time when the message was sent.',
+                      'x-parser-schema-id': 'sentAt'
+                    },
+                    dummyObjectProp2: {
+                      type: 'object',
+                      properties: {
+                        dummyRecursiveProp1: [Circular *1],
+                        dummyRecursiveProp2: {
+                          type: 'string',
+                          'x-parser-schema-id': '<anonymous-schema-9>'
+                        }
+                      },
+                      'x-parser-schema-id': 'dummyRecursiveObject'
+                    }
+                  },
+                  'x-parser-schema-id': 'dummyObject'
+                }
+              },
+              'x-parser-schema-id': 'dummyCreated'
+            },
+            'x-parser-message-parsed': true
+          },
+          bindings: { kafka: { clientId: 'my-app-id' } },
+          'x-parser-original-traits': [
+            { bindings: { kafka: { clientId: 'my-app-id' } } }
+          ]
+        }
+      },
+      'dummy/channel/without/parameter': {
+        bindings: { amqp: { is: 'routingKey' } },
+        subscribe: {
+          operationId: 'receiveSystemInfo',
+          message: {
+            name: 'dummyInfo',
+            title: 'Dummy system info',
+            summary: 'This is just a dummy info message',
+            correlationId: { location: '$message.header#/correlationId' },
+            description: 'More description for a dummy message.\n' +
+              '\n' +
+              'It is a dummy system info message.\n',
+            payload: {
+              type: 'object',
+              required: [ 'prop1' ],
+              properties: {
+                prop1: {
+                  type: 'string',
+                  enum: [ 'option1', 'option2' ],
+                  description: 'Dummy prop1',
+                  'x-parser-schema-id': '<anonymous-schema-6>'
+                },
+                sentAt: {
+                  type: 'string',
+                  format: 'date-time',
+                  description: 'Date and time when the message was sent.',
+                  'x-parser-schema-id': 'sentAt'
+                }
+              },
+              'x-parser-schema-id': 'dummyInfo'
+            },
+            examples: [
+              {
+                headers: { 'my-app-header': 12 },
+                payload: { prop1: 'option1', sentAt: '2020-01-31T13:24:53Z' }
+              },
+              { headers: { 'my-app-header': 13 } },
+              {
+                payload: { prop1: 'option2', sentAt: '2020-01-31T13:24:53Z' }
+              }
+            ],
+            headers: {
+              type: 'object',
+              properties: {
+                'my-app-header': {
+                  type: 'integer',
+                  minimum: 0,
+                  maximum: 100,
+                  'x-parser-schema-id': '<anonymous-schema-11>'
+                },
+                correlationId: {
+                  type: 'string',
+                  'x-parser-schema-id': '<anonymous-schema-12>'
+                }
+              },
+              'x-parser-schema-id': '<anonymous-schema-10>'
+            },
+            'x-parser-original-traits': [
+              {
+                headers: {
+                  type: 'object',
+                  properties: {
+                    'my-app-header': {
+                      type: 'integer',
+                      minimum: 0,
+                      maximum: 100,
+                      'x-parser-schema-id': '<anonymous-schema-14>'
+                    },
+                    correlationId: {
+                      type: 'string',
+                      'x-parser-schema-id': '<anonymous-schema-15>'
+                    }
+                  },
+                  'x-parser-schema-id': '<anonymous-schema-13>'
+                }
+              }
+            ],
+            'x-parser-original-schema-format': 'application/vnd.aai.asyncapi;version=2.0.0',
+            schemaFormat: 'application/vnd.aai.asyncapi;version=2.0.0',
+            'x-parser-original-payload': {
+              type: 'object',
+              required: [ 'prop1' ],
+              properties: {
+                prop1: {
+                  type: 'string',
+                  enum: [ 'option1', 'option2' ],
+                  description: 'Dummy prop1',
+                  'x-parser-schema-id': '<anonymous-schema-6>'
+                },
+                sentAt: {
+                  type: 'string',
+                  format: 'date-time',
+                  description: 'Date and time when the message was sent.',
+                  'x-parser-schema-id': 'sentAt'
+                }
+              },
+              'x-parser-schema-id': 'dummyInfo'
+            },
+            'x-parser-message-parsed': true
+          }
+        }
+      }
+    },
+    components: {
+      messages: {
+        dummyCreated: {
+          name: 'dummyCreated',
+          title: 'Dummy created message',
+          summary: 'This is just a dummy create message',
+          correlationId: {
+            description: 'This is a dummy correlation ID.',
+            location: '$message.header#/correlationId'
+          },
+          tags: [
+            {
+              name: 'message-tag1',
+              externalDocs: {
+                description: 'External docs description 1',
+                url: 'https://www.asyncapi.com/'
+              }
+            },
+            {
+              name: 'message-tag2',
+              description: 'Description 2',
+              externalDocs: { url: 'https://www.asyncapi.com/' }
+            },
+            { name: 'message-tag3' },
+            { name: 'message-tag4', description: 'Description 4' },
+            {
+              name: 'message-tag5',
+              externalDocs: { url: 'https://www.asyncapi.com/' }
+            }
+          ],
+          headers: {
+            type: 'object',
+            properties: {
+              'my-custom-app-header': {
+                type: 'string',
+                'x-parser-schema-id': '<anonymous-schema-2>'
+              },
+              correlationId: {
+                type: 'string',
+                'x-parser-schema-id': '<anonymous-schema-3>'
+              }
+            },
+            'x-parser-schema-id': '<anonymous-schema-1>'
+          },
+          payload: {
+            type: 'object',
+            required: [ 'prop2' ],
+            properties: {
+              prop1: {
+                type: 'integer',
+                minimum: 0,
+                description: 'Dummy prop1',
+                'x-parser-schema-id': '<anonymous-schema-4>'
+              },
+              prop2: {
+                type: 'string',
+                description: 'Dummy prop2',
+                'x-parser-schema-id': '<anonymous-schema-5>'
+              },
+              sentAt: {
+                type: 'string',
+                format: 'date-time',
+                description: 'Date and time when the message was sent.',
+                'x-parser-schema-id': 'sentAt'
+              },
+              dummyArrayWithObject: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  required: [ 'prop1' ],
+                  properties: {
+                    prop1: {
+                      type: 'string',
+                      enum: [ 'option1', 'option2' ],
+                      description: 'Dummy prop1',
+                      'x-parser-schema-id': '<anonymous-schema-6>'
+                    },
+                    sentAt: {
+                      type: 'string',
+                      format: 'date-time',
+                      description: 'Date and time when the message was sent.',
+                      'x-parser-schema-id': 'sentAt'
+                    }
+                  },
+                  'x-parser-schema-id': 'dummyInfo'
+                },
+                'x-parser-schema-id': 'dummyArrayWithObject'
+              },
+              dummyArrayWithArray: {
+                type: 'array',
+                items: [
+                  {
+                    type: 'object',
+                    required: [ 'prop1' ],
+                    properties: {
+                      prop1: {
+                        type: 'string',
+                        enum: [ 'option1', 'option2' ],
+                        description: 'Dummy prop1',
+                        'x-parser-schema-id': '<anonymous-schema-6>'
+                      },
+                      sentAt: {
+                        type: 'string',
+                        format: 'date-time',
+                        description: 'Date and time when the message was sent.',
+                        'x-parser-schema-id': 'sentAt'
+                      }
+                    },
+                    'x-parser-schema-id': 'dummyInfo'
+                  },
+                  {
+                    type: 'string',
+                    'x-parser-schema-id': '<anonymous-schema-7>'
+                  },
+                  {
+                    type: 'number',
+                    'x-parser-schema-id': '<anonymous-schema-8>'
+                  }
+                ],
+                'x-parser-schema-id': 'dummyArrayWithArray'
+              },
+              dummyObject: <ref *1> {
+                type: 'object',
+                properties: {
+                  dummyObjectProp1: {
+                    type: 'string',
+                    format: 'date-time',
+                    description: 'Date and time when the message was sent.',
+                    'x-parser-schema-id': 'sentAt'
+                  },
+                  dummyObjectProp2: {
+                    type: 'object',
+                    properties: {
+                      dummyRecursiveProp1: [Circular *1],
+                      dummyRecursiveProp2: {
+                        type: 'string',
+                        'x-parser-schema-id': '<anonymous-schema-9>'
+                      }
+                    },
+                    'x-parser-schema-id': 'dummyRecursiveObject'
+                  }
+                },
+                'x-parser-schema-id': 'dummyObject'
+              }
+            },
+            'x-parser-schema-id': 'dummyCreated'
+          },
+          'x-parser-original-schema-format': 'application/vnd.aai.asyncapi;version=2.0.0',
+          schemaFormat: 'application/vnd.aai.asyncapi;version=2.0.0',
+          'x-parser-original-payload': {
+            type: 'object',
+            required: [ 'prop2' ],
+            properties: {
+              prop1: {
+                type: 'integer',
+                minimum: 0,
+                description: 'Dummy prop1',
+                'x-parser-schema-id': '<anonymous-schema-4>'
+              },
+              prop2: {
+                type: 'string',
+                description: 'Dummy prop2',
+                'x-parser-schema-id': '<anonymous-schema-5>'
+              },
+              sentAt: {
+                type: 'string',
+                format: 'date-time',
+                description: 'Date and time when the message was sent.',
+                'x-parser-schema-id': 'sentAt'
+              },
+              dummyArrayWithObject: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  required: [ 'prop1' ],
+                  properties: {
+                    prop1: {
+                      type: 'string',
+                      enum: [ 'option1', 'option2' ],
+                      description: 'Dummy prop1',
+                      'x-parser-schema-id': '<anonymous-schema-6>'
+                    },
+                    sentAt: {
+                      type: 'string',
+                      format: 'date-time',
+                      description: 'Date and time when the message was sent.',
+                      'x-parser-schema-id': 'sentAt'
+                    }
+                  },
+                  'x-parser-schema-id': 'dummyInfo'
+                },
+                'x-parser-schema-id': 'dummyArrayWithObject'
+              },
+              dummyArrayWithArray: {
+                type: 'array',
+                items: [
+                  {
+                    type: 'object',
+                    required: [ 'prop1' ],
+                    properties: {
+                      prop1: {
+                        type: 'string',
+                        enum: [ 'option1', 'option2' ],
+                        description: 'Dummy prop1',
+                        'x-parser-schema-id': '<anonymous-schema-6>'
+                      },
+                      sentAt: {
+                        type: 'string',
+                        format: 'date-time',
+                        description: 'Date and time when the message was sent.',
+                        'x-parser-schema-id': 'sentAt'
+                      }
+                    },
+                    'x-parser-schema-id': 'dummyInfo'
+                  },
+                  {
+                    type: 'string',
+                    'x-parser-schema-id': '<anonymous-schema-7>'
+                  },
+                  {
+                    type: 'number',
+                    'x-parser-schema-id': '<anonymous-schema-8>'
+                  }
+                ],
+                'x-parser-schema-id': 'dummyArrayWithArray'
+              },
+              dummyObject: <ref *1> {
+                type: 'object',
+                properties: {
+                  dummyObjectProp1: {
+                    type: 'string',
+                    format: 'date-time',
+                    description: 'Date and time when the message was sent.',
+                    'x-parser-schema-id': 'sentAt'
+                  },
+                  dummyObjectProp2: {
+                    type: 'object',
+                    properties: {
+                      dummyRecursiveProp1: [Circular *1],
+                      dummyRecursiveProp2: {
+                        type: 'string',
+                        'x-parser-schema-id': '<anonymous-schema-9>'
+                      }
+                    },
+                    'x-parser-schema-id': 'dummyRecursiveObject'
+                  }
+                },
+                'x-parser-schema-id': 'dummyObject'
+              }
+            },
+            'x-parser-schema-id': 'dummyCreated'
+          },
+          'x-parser-message-parsed': true
+        },
+        dummyInfo: {
+          name: 'dummyInfo',
+          title: 'Dummy system info',
+          summary: 'This is just a dummy info message',
+          correlationId: { location: '$message.header#/correlationId' },
+          description: 'More description for a dummy message.\n' +
+            '\n' +
+            'It is a dummy system info message.\n',
+          payload: {
+            type: 'object',
+            required: [ 'prop1' ],
+            properties: {
+              prop1: {
+                type: 'string',
+                enum: [ 'option1', 'option2' ],
+                description: 'Dummy prop1',
+                'x-parser-schema-id': '<anonymous-schema-6>'
+              },
+              sentAt: {
+                type: 'string',
+                format: 'date-time',
+                description: 'Date and time when the message was sent.',
+                'x-parser-schema-id': 'sentAt'
+              }
+            },
+            'x-parser-schema-id': 'dummyInfo'
+          },
+          examples: [
+            {
+              headers: { 'my-app-header': 12 },
+              payload: { prop1: 'option1', sentAt: '2020-01-31T13:24:53Z' }
+            },
+            { headers: { 'my-app-header': 13 } },
+            {
+              payload: { prop1: 'option2', sentAt: '2020-01-31T13:24:53Z' }
+            }
+          ],
+          headers: {
+            type: 'object',
+            properties: {
+              'my-app-header': {
+                type: 'integer',
+                minimum: 0,
+                maximum: 100,
+                'x-parser-schema-id': '<anonymous-schema-11>'
+              },
+              correlationId: {
+                type: 'string',
+                'x-parser-schema-id': '<anonymous-schema-12>'
+              }
+            },
+            'x-parser-schema-id': '<anonymous-schema-10>'
+          },
+          'x-parser-original-traits': [
+            {
+              headers: {
+                type: 'object',
+                properties: {
+                  'my-app-header': {
+                    type: 'integer',
+                    minimum: 0,
+                    maximum: 100,
+                    'x-parser-schema-id': '<anonymous-schema-14>'
+                  },
+                  correlationId: {
+                    type: 'string',
+                    'x-parser-schema-id': '<anonymous-schema-15>'
+                  }
+                },
+                'x-parser-schema-id': '<anonymous-schema-13>'
+              }
+            }
+          ],
+          'x-parser-original-schema-format': 'application/vnd.aai.asyncapi;version=2.0.0',
+          schemaFormat: 'application/vnd.aai.asyncapi;version=2.0.0',
+          'x-parser-original-payload': {
+            type: 'object',
+            required: [ 'prop1' ],
+            properties: {
+              prop1: {
+                type: 'string',
+                enum: [ 'option1', 'option2' ],
+                description: 'Dummy prop1',
+                'x-parser-schema-id': '<anonymous-schema-6>'
+              },
+              sentAt: {
+                type: 'string',
+                format: 'date-time',
+                description: 'Date and time when the message was sent.',
+                'x-parser-schema-id': 'sentAt'
+              }
+            },
+            'x-parser-schema-id': 'dummyInfo'
+          },
+          'x-parser-message-parsed': true
+        }
+      },
+      schemas: {
+        dummyCreated: {
+          type: 'object',
+          required: [ 'prop2' ],
+          properties: {
+            prop1: {
+              type: 'integer',
+              minimum: 0,
+              description: 'Dummy prop1',
+              'x-parser-schema-id': '<anonymous-schema-4>'
+            },
+            prop2: {
+              type: 'string',
+              description: 'Dummy prop2',
+              'x-parser-schema-id': '<anonymous-schema-5>'
+            },
+            sentAt: {
+              type: 'string',
+              format: 'date-time',
+              description: 'Date and time when the message was sent.',
+              'x-parser-schema-id': 'sentAt'
+            },
+            dummyArrayWithObject: {
+              type: 'array',
+              items: {
+                type: 'object',
+                required: [ 'prop1' ],
+                properties: {
+                  prop1: {
+                    type: 'string',
+                    enum: [ 'option1', 'option2' ],
+                    description: 'Dummy prop1',
+                    'x-parser-schema-id': '<anonymous-schema-6>'
+                  },
+                  sentAt: {
+                    type: 'string',
+                    format: 'date-time',
+                    description: 'Date and time when the message was sent.',
+                    'x-parser-schema-id': 'sentAt'
+                  }
+                },
+                'x-parser-schema-id': 'dummyInfo'
+              },
+              'x-parser-schema-id': 'dummyArrayWithObject'
+            },
+            dummyArrayWithArray: {
+              type: 'array',
+              items: [
+                {
+                  type: 'object',
+                  required: [ 'prop1' ],
+                  properties: {
+                    prop1: {
+                      type: 'string',
+                      enum: [ 'option1', 'option2' ],
+                      description: 'Dummy prop1',
+                      'x-parser-schema-id': '<anonymous-schema-6>'
+                    },
+                    sentAt: {
+                      type: 'string',
+                      format: 'date-time',
+                      description: 'Date and time when the message was sent.',
+                      'x-parser-schema-id': 'sentAt'
+                    }
+                  },
+                  'x-parser-schema-id': 'dummyInfo'
+                },
+                {
+                  type: 'string',
+                  'x-parser-schema-id': '<anonymous-schema-7>'
+                },
+                {
+                  type: 'number',
+                  'x-parser-schema-id': '<anonymous-schema-8>'
+                }
+              ],
+              'x-parser-schema-id': 'dummyArrayWithArray'
+            },
+            dummyObject: <ref *1> {
+              type: 'object',
+              properties: {
+                dummyObjectProp1: {
+                  type: 'string',
+                  format: 'date-time',
+                  description: 'Date and time when the message was sent.',
+                  'x-parser-schema-id': 'sentAt'
+                },
+                dummyObjectProp2: {
+                  type: 'object',
+                  properties: {
+                    dummyRecursiveProp1: [Circular *1],
+                    dummyRecursiveProp2: {
+                      type: 'string',
+                      'x-parser-schema-id': '<anonymous-schema-9>'
+                    }
+                  },
+                  'x-parser-schema-id': 'dummyRecursiveObject'
+                }
+              },
+              'x-parser-schema-id': 'dummyObject'
+            }
+          },
+          'x-parser-schema-id': 'dummyCreated'
+        },
+        dummyInfo: {
+          type: 'object',
+          required: [ 'prop1' ],
+          properties: {
+            prop1: {
+              type: 'string',
+              enum: [ 'option1', 'option2' ],
+              description: 'Dummy prop1',
+              'x-parser-schema-id': '<anonymous-schema-6>'
+            },
+            sentAt: {
+              type: 'string',
+              format: 'date-time',
+              description: 'Date and time when the message was sent.',
+              'x-parser-schema-id': 'sentAt'
+            }
+          },
+          'x-parser-schema-id': 'dummyInfo'
+        },
+        dummyArrayWithObject: {
+          type: 'array',
+          items: {
+            type: 'object',
+            required: [ 'prop1' ],
+            properties: {
+              prop1: {
+                type: 'string',
+                enum: [ 'option1', 'option2' ],
+                description: 'Dummy prop1',
+                'x-parser-schema-id': '<anonymous-schema-6>'
+              },
+              sentAt: {
+                type: 'string',
+                format: 'date-time',
+                description: 'Date and time when the message was sent.',
+                'x-parser-schema-id': 'sentAt'
+              }
+            },
+            'x-parser-schema-id': 'dummyInfo'
+          },
+          'x-parser-schema-id': 'dummyArrayWithObject'
+        },
+        dummyArrayWithArray: {
+          type: 'array',
+          items: [
+            {
+              type: 'object',
+              required: [ 'prop1' ],
+              properties: {
+                prop1: {
+                  type: 'string',
+                  enum: [ 'option1', 'option2' ],
+                  description: 'Dummy prop1',
+                  'x-parser-schema-id': '<anonymous-schema-6>'
+                },
+                sentAt: {
+                  type: 'string',
+                  format: 'date-time',
+                  description: 'Date and time when the message was sent.',
+                  'x-parser-schema-id': 'sentAt'
+                }
+              },
+              'x-parser-schema-id': 'dummyInfo'
+            },
+            {
+              type: 'string',
+              'x-parser-schema-id': '<anonymous-schema-7>'
+            },
+            {
+              type: 'number',
+              'x-parser-schema-id': '<anonymous-schema-8>'
+            }
+          ],
+          'x-parser-schema-id': 'dummyArrayWithArray'
+        },
+        dummyObject: <ref *1> {
+          type: 'object',
+          properties: {
+            dummyObjectProp1: {
+              type: 'string',
+              format: 'date-time',
+              description: 'Date and time when the message was sent.',
+              'x-parser-schema-id': 'sentAt'
+            },
+            dummyObjectProp2: {
+              type: 'object',
+              properties: {
+                dummyRecursiveProp1: [Circular *1],
+                dummyRecursiveProp2: {
+                  type: 'string',
+                  'x-parser-schema-id': '<anonymous-schema-9>'
+                }
+              },
+              'x-parser-schema-id': 'dummyRecursiveObject'
+            }
+          },
+          'x-parser-schema-id': 'dummyObject'
+        },
+        dummyRecursiveObject: <ref *2> {
+          type: 'object',
+          properties: {
+            dummyRecursiveProp1: <ref *1> {
+              type: 'object',
+              properties: {
+                dummyObjectProp1: {
+                  type: 'string',
+                  format: 'date-time',
+                  description: 'Date and time when the message was sent.',
+                  'x-parser-schema-id': 'sentAt'
+                },
+                dummyObjectProp2: [Circular *2]
+              },
+              'x-parser-schema-id': 'dummyObject'
+            },
+            dummyRecursiveProp2: {
+              type: 'string',
+              'x-parser-schema-id': '<anonymous-schema-9>'
+            }
+          },
+          'x-parser-schema-id': 'dummyRecursiveObject'
+        },
+        sentAt: {
+          type: 'string',
+          format: 'date-time',
+          description: 'Date and time when the message was sent.',
+          'x-parser-schema-id': 'sentAt'
+        }
+      },
+      securitySchemes: {
+        'user-password': { type: 'userPassword' },
+        apiKey: {
+          type: 'apiKey',
+          in: 'user',
+          description: 'Provide your API key as the user and leave the password empty.'
+        },
+        supportedOauthFlows: {
+          type: 'oauth2',
+          description: 'Flows to support OAuth 2.0',
+          flows: {
+            implicit: {
+              authorizationUrl: 'https://authserver.example/auth',
+              scopes: {
+                'dummy:created': 'Ability to create dummy message',
+                'dymmy:read': 'Ability to read dummy info'
+              }
+            },
+            password: {
+              tokenUrl: 'https://authserver.example/token',
+              scopes: {
+                'dummy:created': 'Ability to create dummy message',
+                'dymmy:read': 'Ability to read dummy info'
+              }
+            },
+            clientCredentials: {
+              tokenUrl: 'https://authserver.example/token',
+              scopes: {
+                'dummy:created': 'Ability to create dummy message',
+                'dymmy:read': 'Ability to read dummy info'
+              }
+            },
+            authorizationCode: {
+              authorizationUrl: 'https://authserver.example/auth',
+              tokenUrl: 'https://authserver.example/token',
+              refreshUrl: 'https://authserver.example/refresh',
+              scopes: {
+                'dummy:created': 'Ability to create dummy message',
+                'dymmy:read': 'Ability to read dummy info'
+              }
+            }
+          }
+        },
+        openIdConnectWellKnown: {
+          type: 'openIdConnect',
+          openIdConnectUrl: 'https://authserver.example/.well-known'
+        }
+      },
+      parameters: {
+        dummy: {
+          description: 'The ID of the new dummy message.',
+          schema: {
+            type: 'string',
+            description: 'Description that not be rendered, as parameter has explicit description.',
+            'x-parser-schema-id': 'dummy'
+          }
+        }
+      },
+      messageTraits: {
+        commonHeaders: {
+          headers: {
+            type: 'object',
+            properties: {
+              'my-app-header': {
+                type: 'integer',
+                minimum: 0,
+                maximum: 100,
+                'x-parser-schema-id': '<anonymous-schema-14>'
+              },
+              correlationId: {
+                type: 'string',
+                'x-parser-schema-id': '<anonymous-schema-15>'
+              }
+            },
+            'x-parser-schema-id': '<anonymous-schema-13>'
+          }
+        }
+      },
+      operationTraits: {
+        kafka: { bindings: { kafka: { clientId: 'my-app-id' } } }
+      }
+    },
+    'x-parser-spec-parsed': true,
+    'x-parser-api-version': 0,
+    'x-parser-circular': true
+  },
+  _meta: {}
+}

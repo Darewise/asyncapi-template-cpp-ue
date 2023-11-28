@@ -3,7 +3,7 @@
  * Check the files in the `template` folder to see how to import and use them within a template.
  */
 
-import { Indent, IndentationTypes, withIndendation } from '@asyncapi/generator-react-sdk';
+import { File, Text, Indent, IndentationTypes, withIndendation } from '@asyncapi/generator-react-sdk';
 
 /*
   * Each component has a `childrenContent` property.
@@ -72,5 +72,14 @@ ${withIndendation(childrenContent, 2, IndentationTypes.SPACES)}
     <Indent size={2} type={IndentationTypes.SPACES}>
       {content}
     </Indent>
+  );
+}
+
+export function TestFile() {
+  return (
+    <File name="test.txt">
+      <Text>This is a test</Text>
+    </File>
+
   );
 }

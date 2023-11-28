@@ -7,7 +7,8 @@ module.exports = {
 };
 
 async function generatePdfPngSvg(generator) {
-  const targetDir = generator.targetDir;
+  // TODO: remove this hook
+  /*const targetDir = generator.targetDir;
   const parameters = generator.templateParams;
   //all actions of this hook depend on parameters passed by the user, if non are provided we should just stop the hook
   if (!parameters) return;
@@ -39,8 +40,8 @@ async function generatePdfPngSvg(generator) {
   if (parameters.svg === 'true') {
     const svg = await page.$eval('.mermaid', container => container.innerHTML);
     /* eslint-disable-next-line security/detect-non-literal-fs-filename -- Safe as no value holds user input */
-    fs.writeFileSync(`${targetDir}/index.svg`, svg);
+    /*fs.writeFileSync(`${targetDir}/index.svg`, svg);
   }
 
-  browser.close();
+  browser.close();*/
 }
