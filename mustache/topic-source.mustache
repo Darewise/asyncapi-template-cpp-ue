@@ -11,13 +11,6 @@ namespace {{this}}
 {
 {{/cppNamespaceDeclarations}}
 
-{{classname}}::{{classname}}()
-: Url(TEXT("{{basePath}}"))
-{
-}
-
-{{classname}}::~{{classname}}() {}
-
 bool {{classname}}::ProcessEvent(const FString& InEventString) const
 {
 	return false; // TODO parse into json
@@ -34,7 +27,14 @@ bool {{classname}}::ProcessEvent(const TSharedRef<FJsonObject>& InEventJson) con
 {{#operation}}
 void {{classname}}::PublishEvent(const {{operationIdCamelCase}}& Event) const
 {
-	// TODO: implement this part !
+	FString JsonBody;
+	JsonWriter Writer = TJsonWriterFactory<>::Create(&JsonBody);
+
+	WriteJsonValue(Writer, Event);
+	Writer->Close();
+
+
+	PublishEvent(JsonBody);
 }
 
 {{/operation}}

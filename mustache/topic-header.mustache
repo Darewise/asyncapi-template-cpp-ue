@@ -4,17 +4,18 @@
 #include "CoreMinimal.h"
 #include "{{modelNamePrefix}}BaseModel.h"
 
+{{#imports}}{{{import}}}
+{{/imports}}
+
 {{#cppNamespaceDeclarations}}
 namespace {{this}}
 {
 {{/cppNamespaceDeclarations}}
 
+{{description}}
 class {{dllapi}} {{classname}}
 {
 public:
-	{{classname}}();
-	~{{classname}}();
-
 	bool ProcessEvent(const FString& InEventString) const;
 	bool ProcessEvent(const TSharedRef<FJsonObject>& InEventJson) const;
 
@@ -23,6 +24,9 @@ public:
     {{#operations}}{{#operation}}{{#description}}/* {{{.}}} */
 	{{/description}}void PublishEvent(const {{operationIdCamelCase}}&) const;
     {{/operation}}{{/operations}}
+
+private:
+	void PublishEvent(const FString& a_jsonBody);
 };
 
 {{#cppNamespaceDeclarations}}

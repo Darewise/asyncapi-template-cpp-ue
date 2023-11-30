@@ -1,0 +1,517 @@
+asyncapi: '2.6.0'
+info:
+  title: Corvus Backend Google Pub/Sub API
+  version: '1.0.0'
+  description: |
+    Publish and consume events from Corvus backend
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0
+
+defaultContentType: application/json
+
+servers:
+  cloudPubSub:
+    url: '{cloudPubSubEndpoint}.googleapis.com'
+    description: The API for Cloud Pub/Sub
+    protocol: googlepubsub
+    variables:
+      cloudPubSubEndpoint:
+        description: The Cloud Pub/Sub endpoint region
+        enum:
+        - europe-west4-b
+
+channels:
+  pubnub_token_main:
+    description: Topic for **pubnub_token** events on **main** environment.
+    publish:
+      message:
+        $ref: '#/components/messages/pubnub_token'
+    subscribe:
+      message:
+        $ref: '#/components/messages/pubnub_token'
+    bindings:
+      googlepubsub:
+        topic: projects/corvus-219614/topics/pubnub_token_main
+        schemaSettings:
+          encoding: json
+          name: projects/corvus-219614/schemas/pubnub_token_main.avro
+
+  groups_main:
+    description: Topic for **multiple** events on **main** environment.
+    publish:
+      message:
+        oneOf:
+          - $ref: '#/components/messages/group_notification_invitation_accepted'
+          - $ref: '#/components/messages/group_notification_invitation_canceled'
+          - $ref: '#/components/messages/group_notification_invitation_created'
+          - $ref: '#/components/messages/group_notification_member_added'
+          - $ref: '#/components/messages/group_notification_member_promoted'
+          - $ref: '#/components/messages/group_notification_member_removed'
+          - $ref: '#/components/messages/group_notification_visibility_changed'
+    subscribe:
+      message:
+        oneOf:
+          - $ref: '#/components/messages/group_notification_invitation_accepted'
+          - $ref: '#/components/messages/group_notification_invitation_canceled'
+          - $ref: '#/components/messages/group_notification_invitation_created'
+          - $ref: '#/components/messages/group_notification_member_added'
+          - $ref: '#/components/messages/group_notification_member_promoted'
+          - $ref: '#/components/messages/group_notification_member_removed'
+          - $ref: '#/components/messages/group_notification_visibility_changed'
+    bindings:
+      googlepubsub:
+        topic: projects/corvus-219614/topics/groups_main
+        schemaSettings:
+          encoding: json
+          name: projects/corvus-219614/schemas/groups_main.avro
+
+  backend_analytics_main:
+    description: Topic for **backend_analytics** events on **main** environment.
+    publish:
+      message:
+        $ref: '#/components/messages/backend_analytics'
+    subscribe:
+      message:
+        $ref: '#/components/messages/backend_analytics'
+    bindings:
+      googlepubsub:
+        topic: projects/corvus-219614/topics/backend_analytics_main
+        schemaSettings:
+          encoding: json
+          name: projects/corvus-219614/schemas/backend_analytics_main.avro
+
+components:
+  messages:
+    pubnub_token:
+      name: pubnub_token
+      title: pubnub_token
+      summary: Used to notify that a new Pubnub token have been issues for userId / channelName combination.
+      traits:
+        - $ref: '#/components/messageTraits/commonAttributes'
+      payload:
+        type: object
+        additionalProperties: false
+        required:
+          - UserId
+          - ChannelName
+          - Token
+        properties:
+          UserId:
+            description: The userId attached to the generated token.
+            type: string
+            examples:
+              - 8330969135D0191A
+          ChannelName:
+            description: The channel name attached to the generated token.
+            type: string
+            examples:
+              - channel.test
+          Token:
+            description: The actual token to use for userId / channelName combinaison.
+            type: string
+            examples:
+              - p0F2AkF0GmUMGjFDdHRsGajAQ3Jlc6VEY2hhbqFsdGVzdC5jaGFubmVsGP9DZ3JwoENzcGOgQ3VzcqIDejZKBDcGF0pURjaGFuoENncnCgQ3NwY6BDdXNyoER1dWlkoERtZXRhoENzaWdYIKwjZqqTzHTOciPVqMQ2huN2tAYqHabKCcEMjkVbkYvL
+
+    group_notification_invitation_accepted:
+      name: group_notification_invitation_accepted
+      title: group_notification_invitation_accepted
+      traits:
+        - $ref: '#/components/messageTraits/commonAttributes'
+      payload:
+        type: object
+        additionalProperties: false
+        required:
+          - UseCase
+          - InvitationId
+          - InviterPlayerId
+          - InvitedPlayerId
+          - GroupId
+        properties:
+          UseCase:
+            description: The group notification use case identifier.
+            type: string
+            enum:
+              - unknown
+              - group_created
+              - group_visibility_changed
+              - group_member_added
+              - group_member_removed
+              - group_invitation_created
+              - group_invitation_accepted
+              - group_invitation_canceled
+              - group_member_promoted
+            examples:
+              - group_created
+              - group_member_added
+          InvitationId:
+            type: string
+            examples:
+              - 8330969135D0191A-c830d561-1d8c-4c6f-9721-f0c86ef27af3
+          InviterPlayerId:
+            type: string
+            examples:
+              - E8323606FB7711CA
+          InvitedPlayerId:
+            type: string
+            examples:
+              - 8330969135D0191A
+          GroupId:
+            description: Group unique guid identifier.
+            type: string
+            examples:
+              - 93daed97-3fb0-4251-9c7e-fd4d30c34281
+
+    group_notification_invitation_canceled:
+      name: group_notification_invitation_canceled
+      title: group_notification_invitation_canceled
+      traits:
+        - $ref: '#/components/messageTraits/commonAttributes'
+      payload:
+        type: object
+        additionalProperties: false
+        required:
+          - UseCase
+          - InvitationId
+          - InviterPlayerId
+          - InvitedPlayerId
+          - GroupId
+        properties:
+          UseCase:
+            description: The group notification use case identifier.
+            type: string
+            enum:
+              - unknown
+              - group_created
+              - group_visibility_changed
+              - group_member_added
+              - group_member_removed
+              - group_invitation_created
+              - group_invitation_accepted
+              - group_invitation_canceled
+              - group_member_promoted
+            examples:
+              - group_created
+              - group_member_added
+          InvitationId:
+            type: string
+            examples:
+              - 8330969135D0191A-c830d561-1d8c-4c6f-9721-f0c86ef27af3
+          InviterPlayerId:
+            type: string
+            examples:
+              - E8323606FB7711CA
+          InvitedPlayerId:
+            type: string
+            examples:
+              - 8330969135D0191A
+          GroupId:
+            description: Group unique guid identifier.
+            type: string
+            examples:
+              - 93daed97-3fb0-4251-9c7e-fd4d30c34281
+
+    group_notification_invitation_created:
+      name: group_notification_invitation_created
+      title: group_notification_invitation_created
+      traits:
+        - $ref: '#/components/messageTraits/commonAttributes'
+      payload:
+        type: object
+        additionalProperties: false
+        required:
+          - UseCase
+          - InvitationId
+          - InviterPlayerId
+          - InvitedPlayerId
+          - GroupId
+        properties:
+          UseCase:
+            description: The group notification use case identifier.
+            type: string
+            enum:
+              - unknown
+              - group_created
+              - group_visibility_changed
+              - group_member_added
+              - group_member_removed
+              - group_invitation_created
+              - group_invitation_accepted
+              - group_invitation_canceled
+              - group_member_promoted
+            examples:
+              - group_created
+              - group_member_added
+          InvitationId:
+            type: string
+            examples:
+              - 8330969135D0191A-c830d561-1d8c-4c6f-9721-f0c86ef27af3
+          InviterPlayerId:
+            type: string
+            examples:
+              - E8323606FB7711CA
+          InvitedPlayerId:
+            type: string
+            examples:
+              - 8330969135D0191A
+          GroupId:
+            description: Group unique guid identifier.
+            type: string
+            examples:
+              - 93daed97-3fb0-4251-9c7e-fd4d30c34281
+
+    group_notification_member_added:
+      name: group_notification_member_added
+      title: group_notification_member_added
+      traits:
+        - $ref: '#/components/messageTraits/commonAttributes'
+      payload:
+        type: object
+        additionalProperties: false
+        required:
+          - UseCase
+          - PlayerIdAdded
+          - GroupId
+        properties:
+          UseCase:
+            description: The group notification use case identifier.
+            type: string
+            enum:
+              - unknown
+              - group_created
+              - group_visibility_changed
+              - group_member_added
+              - group_member_removed
+              - group_invitation_created
+              - group_invitation_accepted
+              - group_invitation_canceled
+              - group_member_promoted
+            examples:
+              - group_created
+              - group_member_added
+          PlayerIdAdded:
+            type: string
+            examples:
+              - 8330969135D0191A
+          GroupId:
+            description: Group unique guid identifier.
+            type: string
+            examples:
+              - 93daed97-3fb0-4251-9c7e-fd4d30c34281
+
+    group_notification_member_promoted:
+      name: group_notification_member_promoted
+      title: group_notification_member_promoted
+      traits:
+        - $ref: '#/components/messageTraits/commonAttributes'
+      payload:
+        type: object
+        additionalProperties: false
+        required:
+          - UseCase
+          - PromotedPlayerId
+          - UpdatedRole
+          - GroupId
+        properties:
+          UseCase:
+            description: The group notification use case identifier.
+            type: string
+            enum:
+              - unknown
+              - group_created
+              - group_visibility_changed
+              - group_member_added
+              - group_member_removed
+              - group_invitation_created
+              - group_invitation_accepted
+              - group_invitation_canceled
+              - group_member_promoted
+            examples:
+              - group_created
+              - group_member_added
+          PromotedPlayerId:
+            type: string
+            examples:
+              - 8330969135D0191A
+          UpdatedRole:
+            type: string
+            enum:
+              - Owner
+              - Admin
+              - Member
+            examples:
+              - Owner
+              - Member
+          GroupId:
+            description: Group unique guid identifier.
+            type: string
+            examples:
+              - 93daed97-3fb0-4251-9c7e-fd4d30c34281
+
+    group_notification_member_removed:
+      name: group_notification_member_removed
+      title: group_notification_member_removed
+      traits:
+        - $ref: '#/components/messageTraits/commonAttributes'
+      payload:
+        type: object
+        additionalProperties: false
+        required:
+          - UseCase
+          - PlayerIdRemoved
+          - GroupId
+        properties:
+          UseCase:
+            description: The group notification use case identifier.
+            type: string
+            enum:
+              - unknown
+              - group_created
+              - group_visibility_changed
+              - group_member_added
+              - group_member_removed
+              - group_invitation_created
+              - group_invitation_accepted
+              - group_invitation_canceled
+              - group_member_promoted
+            examples:
+              - group_created
+              - group_member_added
+          PlayerIdRemoved:
+            type: string
+            examples:
+              - 8330969135D0191A
+          GroupId:
+            description: Group unique guid identifier.
+            type: string
+            examples:
+              - 93daed97-3fb0-4251-9c7e-fd4d30c34281
+
+    group_notification_visibility_changed:
+      name: group_notification_visibility_changed
+      title: group_notification_visibility_changed
+      traits:
+        - $ref: '#/components/messageTraits/commonAttributes'
+      payload:
+        type: object
+        additionalProperties: false
+        required:
+          - UseCase
+          - UpdatedVisibility
+          - GroupId
+        properties:
+          UseCase:
+            description: The group notification use case identifier.
+            type: string
+            enum:
+              - unknown
+              - group_created
+              - group_visibility_changed
+              - group_member_added
+              - group_member_removed
+              - group_invitation_created
+              - group_invitation_accepted
+              - group_invitation_canceled
+              - group_member_promoted
+            examples:
+              - group_created
+              - group_member_added
+          UpdatedVisibility:
+            type: string
+            enum:
+              - Private
+              - Public
+            examples:
+              - Public
+              - Private
+          GroupId:
+            description: Group unique guid identifier.
+            type: string
+            examples:
+              - 93daed97-3fb0-4251-9c7e-fd4d30c34281
+
+    backend_analytics:
+      name: backend_analytics
+      title: backend_analytics
+      summary: Allow to insert any event on BigQuery side.
+      traits:
+        - $ref: '#/components/messageTraits/commonAttributes'
+      payload:
+        type: object
+        additionalProperties: false
+        required:
+          - event_id
+          - analytics_environment
+          - source_type
+          - event_name
+          - event_timestamp
+        properties:
+          event_id:
+            description: An unique Guid used in BigQuery as primary key.
+            type: string
+            examples:
+              - 93daed97-3fb0-4251-9c7e-fd4d30c34281
+          analytics_environment:
+            description: The environment the event originated from.
+            type: string
+            examples:
+              - development
+              - main
+          source_type:
+            description: The service source identifier.
+            type: string
+            examples:
+              - gateway
+              - coordinator
+          event_name:
+            description: The event name in BigQuery table.
+            type: string
+            examples:
+              - backend_player_login
+              - backend_ccu
+          event_timestamp:
+            description: The event time of occurence.
+            type: number
+            format: int64
+            examples:
+              - 1683033653
+          event_attributes:
+            description: The event additionnal attributes.
+            type: object
+            additionalProperties:
+              properties:
+                key:
+                  type: string
+                value:
+                  type: string
+            examples:
+              - { "playerId": "50490FB7482137E7" }
+
+  messageTraits:
+    commonAttributes:
+      headers:
+        type: object
+        required:
+          - eventName
+          - eventDate
+        properties:
+          eventName:
+            description: The event name.
+            type: string
+            examples:
+              - configuration_update
+              - wallet_unlink
+          eventDate:
+            description: The timestamp at which the event was published.
+            type: number
+            format: long
+            examples:
+              - 1681821612
+          correlationId:
+            description: A GUID that you can provide to correlate multiple events / logs together. It will be transported by the backend anwsers. If not present a new value is given.
+            type: string
+            examples:
+              - 5057ee4b-f443-4f1e-9d40-c003b89fc4c0
+
+
+

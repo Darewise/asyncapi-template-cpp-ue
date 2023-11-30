@@ -2,8 +2,7 @@ import { File, Text, render } from '@asyncapi/generator-react-sdk';
 
 // Import custom components from file 
 import { Mustache } from '../../components/mustache';
-import { TestFile } from '../../components/common';
-import { toCppValidPascalCase } from '../../helpers/unreal';
+import { initView, addSchemaToView, toCppValidPascalCase, getSchemaView, getMessageView } from '../../helpers/unreal';
 
 /* 
  * Each template to be rendered must have as a root component a File component,
@@ -16,49 +15,43 @@ import { toCppValidPascalCase } from '../../helpers/unreal';
  * 
  * Notice that you can pass parameters to components. In fact, underneath, each component is a pure Javascript function.
  */
-export default function({ asyncapi, params }) {
+export default function ({ asyncapi, params }) {
 
-  
-
-  if (!asyncapi.hasComponents()) {
-    console.log("no components");
-    return null;
-  }
-
-    // for debugging the input
-  // console.dir(asyncapi, { depth: null });
-
-  const modelNamePrefix = "modelNamePrefix";
+  const view = initView({ asyncapi, params });
+  const modelNamePrefix = view.modelNamePrefix;
+  const unrealModuleName = view.unrealModuleName;
 
   const helperFiles = [
     <File name={`${modelNamePrefix}Helpers.cpp`}>
-      <Mustache template="mustache/helpers-source.mustache" data={asyncapi} />
+      <Mustache template="mustache/helpers-source.mustache" data={view} />
     </File>
   ];
 
-  const unrealModuleName = "module";
+  let projectFiles = []
+  if (params.buildProjectFiles) {
+    // only include if it's in the parameters
+    projectFiles = [
+      <File name={`${unrealModuleName}Module.h`}>
+        <Mustache template="mustache/module-header.mustache" data={view} />
+      </File>,
+      <File name={`${unrealModuleName}Module.cpp`}>
+        <Mustache template="mustache/module-source.mustache" data={view} />
+      </File>
+    ];
+  }
 
-  // only include if it's in the parameters
-  const projectFiles = [
-    <File name={`${unrealModuleName}Module.h`}>
-      <Mustache template="mustache/module-header.mustache" data={asyncapi} />
-    </File>,
-    <File name={`${unrealModuleName}Module.cpp`}>
-      <Mustache template="mustache/module-source.mustache" data={asyncapi} />
-    </File>
-  ];
+  const messages = asyncapi.allMessages();
+  let messageFiles = []
+  asyncapi.allMessages().forEach((message) => {
+    const messageView = getMessageView(message);
+    const fullView = { ...view, ...messageView }
 
-  const schemas = asyncapi.allSchemas();
-  const schemaFiles = Array.from(schemas).map(([schemaName, schema]) => {
-    const name = toCppValidPascalCase(schemaName);
-    const modelNamePrefix = "modelNamePrefix";
- 
-    return (
-    <File name={`${modelNamePrefix}${name}.cpp`}>
-        <Mustache template="mustache/model-source.mustache" data={asyncapi} />
-    </File>
+    messageFiles.push(
+      <File name={`${modelNamePrefix}${fullView.name}.cpp`}>
+        <Mustache template="mustache/model-source.mustache" data={fullView} />
+      </File>
     );
   });
 
-  return [...helperFiles, ...projectFiles, ...schemaFiles];
+  return [...helperFiles, ...projectFiles, ...messageFiles];
 }

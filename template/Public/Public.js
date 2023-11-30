@@ -16,12 +16,11 @@ import { toCppValidPascalCase } from '../../helpers/unreal';
  * Notice that you can pass parameters to components. In fact, underneath, each component is a pure Javascript function.
  */
 export default function({ asyncapi, params }) {
-  if (!asyncapi.hasComponents()) {
-    console.log("no components");
-    return null;
-  }
+
   // for debugging the input
   // console.dir(asyncapi, { depth: null });
+
+  return {};
 
   const modelNamePrefix = "modelNamePrefix";
 

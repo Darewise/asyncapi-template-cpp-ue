@@ -1,7 +1,8 @@
-import { File, Text, render } from '@asyncapi/generator-react-sdk';
+import { File } from '@asyncapi/generator-react-sdk';
 
 // Import custom components from file 
 import { Mustache } from '../components/mustache';
+import { initView } from '../helpers/unreal';
 
 /* 
  * Each template to be rendered must have as a root component a File component,
@@ -15,21 +16,22 @@ import { Mustache } from '../components/mustache';
  * Notice that you can pass parameters to components. In fact, underneath, each component is a pure Javascript function.
  */
 export default function({ asyncapi, params }) {
-  if (!asyncapi.hasComponents()) {
-    return null;
-  }
-  // for debugging the input
-  // console.dir(asyncapi, { depth: null });
+
+  const view = initView({ asyncapi, params });
 
   const modelNamePrefix = "modelNamePrefix";
   const unrealModuleName = "module";
 
   // only include if it's in the parameters
-  const projectFiles = [
-    <File name={`${unrealModuleName}.Build.cs`}>
-      <Mustache template="mustache/Build.cs.mustache" data={asyncapi} />
-    </File>
-  ];
+  if(params.buildProjectFiles)
+  {
+    const projectFiles = [
+      <File name={`${unrealModuleName}.Build.cs`}>
+        <Mustache template="mustache/Build.cs.mustache" data={view} />
+      </File>
+    ];
 
-  return projectFiles;
+    return projectFiles;
+  }
+
 }

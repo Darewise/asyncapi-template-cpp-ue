@@ -16,7 +16,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/asyncapi/template-for-generator-templates.git"
+    "url": "git+https://github.com/Darewise/asyncapi-template-cpp-ue"
   },
   "keywords": [
     "asyncapi",
@@ -31,9 +31,9 @@
     "access": "public"
   },
   "bugs": {
-    "url": "https://github.com/asyncapi/template-for-generator-templates/issues"
+    "url": "https://github.com/Darewise/asyncapi-template-cpp-ue/issues"
   },
-  "homepage": "https://github.com/asyncapi/template-for-generator-templates#readme",
+  "homepage": "https://github.com/Darewise/asyncapi-template-cpp-ue#readme",
   "dependencies": {
     "@asyncapi/generator-filters": "^2.1.0",
     "@asyncapi/generator-hooks": "^0.1.0",
@@ -41,26 +41,25 @@
     "puppeteer": "^19.8.5"
   },
   "generator": {
+    "name": "cpp-ue",
     "renderer": "react",
+    "apiVersion": "v3",
     "parameters": {
-      "asyncapiFileDir": {
-        "description": "Custom location of the AsyncAPI file that you provided as an input in generation. By default it is located in the root of the output directory"
+      "unrealModuleName": {
+        "description": "Name for the generated unreal module",
+        "default": "AsyncAPI"
       },
-      "pdf": {
-        "description": "Set to `true` to get index.pdf generated next to your index.html",
-        "default": false
+      "modelNamePrefix": {
+        "description": "Prefix for all the C++ symbols",
+        "default": ""
       },
-      "png": {
-        "description": "Set to `true` to get index.png generated next to your index.html",
-        "default": false
+      "buildProjectFiles": {
+        "description": "Generate Build.cs and module files",
+        "default": true
       },
-      "svg": {
-        "description": "Set to `true` to get index.svg generated next to your index.html",
-        "default": false
-      },
-      "maxTextSize": {
-        "description": "It is possible that in case of an extremely large AsyncAPI document default mermaid recommended text size will not be enough. Then you need to explicitly make it larger",
-        "default": 50000
+      "cppNamespace": {
+        "description": "C++ namespace (convention: name::space::for::api).",
+        "default": "AsyncAPI"
       }
     },
     "nonRenderableFiles": [
