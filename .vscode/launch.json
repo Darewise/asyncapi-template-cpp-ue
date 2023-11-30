@@ -9,14 +9,12 @@
         "timeout": 10000,
         "sourceMaps": true,
         "args": [
-          "./test/fixtures/dummy.yml",
-          "./template",
+          "./test/fixtures/corvus.yaml",
+          "./",
           "--output",
-          "./output",
-          "--install",
-          "--force-write"
+          "./output"
         ],
-        "program": "ag"
+        "program": "./node_modules/@asyncapi/generator/cli.js"
       }
     ]
   }
