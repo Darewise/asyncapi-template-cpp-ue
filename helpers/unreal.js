@@ -1,14 +1,4 @@
-// TODO: convert the asyncapi parsed object into a openapi-generator compatible object in order to use the "same" mustache files and we're done
-
-export function toCppValidCamelCase(input) {
-    const sanitized = input.replace(/[^a-zA-Z0-9]+/g, '_');
-
-    // Ensure the first letter and each letter following underscores are uppercase
-    const camelCase = sanitized.replace(/(?:^|_)([a-zA-Z0-9])/g, (match, letter) => index === 0 ? letter.toLowerCase() : letter.toUpperCase());
-
-    // Remove leading and trailing underscores
-    return camelCase.replace(/_/g, '');
-}
+// Here we parse the asyncapi object into a format suitable for our mustache files
 
 export function toCppValidPascalCase(input) {
     const sanitized = input.replace(/[^a-zA-Z0-9]+/g, '_');
@@ -40,10 +30,11 @@ function isPrimitiveType(type) {
         'datetime',
         'uuid',
         'anytype',
-        'any'
+        'any',
+        'object', // considered a primitive type here because we will save it as Json
     ];
 
-    return primitiveTypes.includes(type);
+    return primitiveTypes.includes(type.toLowerCase());
 }
 
 function toUnrealType(type, format) {
@@ -70,9 +61,10 @@ function toUnrealType(type, format) {
         list: "TArray",
         map: "TMap",
         object: "TSharedPtr<FJsonObject>",
-        UUID: "FGuid",
+        uuid: "FGuid",
         any: "TSharedPtr<FJsonValue>",
         anytype: "TSharedPtr<FJsonValue>",
+        object: "TSharedPtr<FJsonObject>",
     };
 
     // Use the format first as it's more specific, if not the type, and defaulting to the input
@@ -148,19 +140,19 @@ export function getSchemaView(id, schema, imports, exports) {
         schemaView.id = id;
         schemaView.name = toCppValidPascalCase(id);
         schemaView.classname = schemaView.name;
+        schemaView.title = schema.title();
+        schemaView.description = schema.description();
+        schemaView.examples = schema.examples();
     }
-    schemaView.title = schema.title();
-    schemaView.description = schema.description();
-    schemaView.examples = schema.examples();
 
-    if (schema.properties()) // complex type
+    if (schema.properties()) // object type
     {
         schemaView.vars = []
         for (const [id, property] of Object.entries(schema.properties())) {
             // Property is also a schema
             const propView = getSchemaView(id, property, imports, exports);
             if (id) {
-                propView.isRequired = schema.required?.().includes(id);
+                propView.required = schema.required?.().includes(id);
             }
 
             schemaView.vars.push(propView);
@@ -175,14 +167,42 @@ export function getSchemaView(id, schema, imports, exports) {
     else if (schema.items() != null) // container type
     {
         //TODO : !
+        throw new Error('Container type found and not currently handled : ${schema.id()}')
     }
     else {
         if (!isPrimitiveType(schema.type())) {
-            throw new Error("Unknown type found : ", schema.type());
+            throw new Error(`Unknown type found: ${schema.type()} ${schema.id()}`);
         }
 
         schemaView.dataType = toUnrealType(schema.type(), schema.format());
         schemaView.defaultValue = toDefaultValue(schema.type(), schema.format(), schema.default())
+       
+        if(schema.type() == "string")
+        {
+            if(schema.enum())
+            {
+                schemaView.isEnum = true;
+
+                if(id)
+                {
+                    schemaView.enumName = schemaView.name + "Values";
+                    schemaView.datatypeWithEnum = schemaView.enumName;
+                }
+                
+                schemaView.enumVars = [];
+                for(const enumValue of schema.enum())
+                {
+                    let enumVar = {};
+                    enumVar.value = JSON.stringify(enumValue);
+                    enumVar.name = toCppValidPascalCase(enumVar.value);
+                    schemaView.enumVars.push(enumVar);
+                }
+            }
+            else
+            {
+                schemaView.isString = true;
+            }
+        }        
     }
 
     return schemaView;

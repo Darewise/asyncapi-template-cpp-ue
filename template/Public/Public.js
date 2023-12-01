@@ -1,28 +1,15 @@
+
 import { File, Text, render } from '@asyncapi/generator-react-sdk';
 
 // Import custom components from file 
 import { Mustache } from '../../components/mustache';
-import { toCppValidPascalCase } from '../../helpers/unreal';
+import { initView, getMessageView } from '../../helpers/unreal';
 
-/* 
- * Each template to be rendered must have as a root component a File component,
- * otherwise it will be skipped.
- * 
- * If you don't want to render anything, you can return `null` or `undefined` and then Generator will skip the given template.
- * 
- * Below you can see how reusable chunks (components) could be called.
- * Just write a new component (or import it) and place it inside the File or another component.
- * 
- * Notice that you can pass parameters to components. In fact, underneath, each component is a pure Javascript function.
- */
-export default function({ asyncapi, params }) {
+export default function ({ asyncapi, params }) {
 
-  // for debugging the input
-  // console.dir(asyncapi, { depth: null });
-
-  return {};
-
-  const modelNamePrefix = "modelNamePrefix";
+  const view = initView({ asyncapi, params });
+  const modelNamePrefix = view.modelNamePrefix;
+  const unrealModuleName = view.unrealModuleName;
 
   const helperFiles = [
     <File name={`${modelNamePrefix}BaseModel.h`}>
@@ -33,23 +20,18 @@ export default function({ asyncapi, params }) {
     </File>
   ];
 
-  const unrealModuleName = "module";
+  const messages = asyncapi.allMessages();
+  let messageFiles = []
+  asyncapi.allMessages().forEach((message) => {
+    const messageView = getMessageView(message);
+    const fullView = { ...view , models: ...messageView };
 
-  const schemas = asyncapi.allSchemas();
-  const schemaFiles = Array.from(schemas).map(([schemaName, schema]) => {
-    const sanitizedName = toCppValidPascalCase(schemaName);
-    console.log ("input: ", schemaName, " pascalCase: ", sanitizedName )
-    const modelNamePrefix = "modelNamePrefix";
- 
-    return (
-    <File name={`${modelNamePrefix}${sanitizedName}.h`}>
-        <Mustache template="mustache/model-header.mustache" data={asyncapi} />
-    </File>
+    messageFiles.push(
+      <File name={`${modelNamePrefix}${fullView.classname}.h`}>
+        <Mustache template="mustache/model-source.mustache" data={fullView} />
+      </File>
     );
   });
 
- //console.log("helperFiles files:", helperFiles);
-  //console.log("schema files:", schemaFiles);
-
-  return [...helperFiles, ...schemaFiles];
+  return [...helperFiles, ...messageFiles];
 }

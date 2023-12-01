@@ -10,7 +10,6 @@ namespace {{this}}
 {
 {{/cppNamespaceDeclarations}}
 {{#models}}
-{{#model}}
 
 /*
  * {{classname}}
@@ -30,7 +29,6 @@ public:
 
 	{{#isString}}
 	{{#isEnum}}
-	{{#allowableValues}}
 	enum class Values
 	{
 		{{#enumVars}}
@@ -39,7 +37,6 @@ public:
   	};
 
 	Values Value{{#defaultValue}} = {{{.}}}{{/defaultValue}};
-	{{/allowableValues}}
 
 	static FString EnumToString(const Values& EnumValue);
 	static bool EnumFromString(const FString& EnumAsString, Values& EnumValue);
@@ -50,14 +47,12 @@ public:
 	{{/isString}}
     {{#vars}}
 	{{#isEnum}}
-	{{#allowableValues}}
 	enum class {{{enumName}}}
 	{
 		{{#enumVars}}
 		{{name}},
 		{{/enumVars}}
   	};
-	{{/allowableValues}}
 
 	static FString EnumToString(const {{{enumName}}}& EnumValue);
 	static bool EnumFromString(const FString& EnumAsString, {{{enumName}}}& EnumValue);
@@ -71,7 +66,6 @@ public:
     {{/vars}}
 };
 
-{{/model}}
 {{/models}}
 {{#cppNamespaceDeclarations}}
 }
