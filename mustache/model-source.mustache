@@ -1,5 +1,5 @@
 {{>licenseInfo}}
-#include "{{classname}}.h"
+#include "{{filename}}.h"
 
 #include "{{unrealModuleName}}Module.h"
 #include "{{modelNamePrefix}}Helpers.h"
@@ -7,7 +7,7 @@
 #include "Templates/SharedPointer.h"
 
 {{#cppNamespaceDeclarations}}
-namespace {{this}}
+namespace {{.}}
 {
 {{/cppNamespaceDeclarations}}
 {{#models}}
@@ -65,9 +65,7 @@ inline bool TryGetJsonValue(const TSharedPtr<FJsonValue>& JsonValue, {{classname
 }
 
 {{/isEnum}}
-{{#hasEnums}}
-{{#vars}}
-{{#isEnum}}
+{{#vars}}{{#isEnum}}
 inline FString ToString(const {{classname}}::{{{enumName}}}& Value)
 {
 	switch (Value)
@@ -120,9 +118,115 @@ inline bool TryGetJsonValue(const TSharedPtr<FJsonValue>& JsonValue, {{classname
 	return false;
 }
 
-{{/isEnum}}
-{{/vars}}
-{{/hasEnums}}
+{{/isEnum}}{{/vars}}
+{{#headers}}{{#vars}}{{#isEnum}}
+inline FString ToString(const {{classname}}::Headers::{{{enumName}}}& Value)
+{
+	switch (Value)
+	{
+	{{#enumVars}}
+	case {{classname}}::Headers::{{{enumName}}}::{{name}}:
+		return TEXT("{{{value}}}");
+	{{/enumVars}}
+	}
+
+	UE_LOG(Log{{unrealModuleName}}, Error, TEXT("Invalid {{classname}}::Headers::{{{enumName}}} Value (%d)"), (int)Value);
+	return TEXT("");
+}
+
+FString {{classname}}::Headers::EnumToString(const {{classname}}::Headers::{{{enumName}}}& EnumValue)
+{
+	return ToString(EnumValue);
+}
+
+inline bool FromString(const FString& EnumAsString, {{classname}}::Headers::{{{enumName}}}& Value)
+{
+	static TMap<FString, {{classname}}::Headers::{{{enumName}}}> StringToEnum = { {{#enumVars}}
+		{ TEXT("{{{value}}}"), {{classname}}::Headers::{{{enumName}}}::{{name}} },{{/enumVars}} };
+
+	const auto Found = StringToEnum.Find(EnumAsString);
+	if(Found)
+		Value = *Found;
+
+	return Found != nullptr;
+}
+
+bool {{classname}}::Headers::EnumFromString(const FString& EnumAsString, {{classname}}::Headers::{{{enumName}}}& EnumValue)
+{
+	return FromString(EnumAsString, EnumValue);
+}
+
+inline void WriteJsonValue(JsonWriter& Writer, const {{classname}}::Payload::{{{enumName}}}& Value)
+{
+	WriteJsonValue(Writer, ToString(Value));
+}
+
+inline bool TryGetJsonValue(const TSharedPtr<FJsonValue>& JsonValue, {{classname}}::Payload::{{{enumName}}}& Value)
+{
+	FString TmpValue;
+	if (JsonValue->TryGetString(TmpValue))
+	{
+		if(FromString(TmpValue, Value))
+			return true;
+	}
+	return false;
+}
+
+{{/isEnum}}{{/vars}}{{/headers}}
+{{#payload}}{{#vars}}{{#isEnum}}
+inline FString ToString(const {{classname}}::Payload::{{{enumName}}}& Value)
+{
+	switch (Value)
+	{
+	{{#enumVars}}
+	case {{classname}}::Payload::{{{enumName}}}::{{name}}:
+		return TEXT("{{{value}}}");
+	{{/enumVars}}
+	}
+
+	UE_LOG(Log{{unrealModuleName}}, Error, TEXT("Invalid {{classname}}::Payload::{{{enumName}}} Value (%d)"), (int)Value);
+	return TEXT("");
+}
+
+FString {{classname}}::Payload::EnumToString(const {{classname}}::Payload::{{{enumName}}}& EnumValue)
+{
+	return ToString(EnumValue);
+}
+
+inline bool FromString(const FString& EnumAsString, {{classname}}::Payload::{{{enumName}}}& Value)
+{
+	static TMap<FString, {{classname}}::Payload::{{{enumName}}}> StringToEnum = { {{#enumVars}}
+		{ TEXT("{{{value}}}"), {{classname}}::Payload::{{{enumName}}}::{{name}} },{{/enumVars}} };
+
+	const auto Found = StringToEnum.Find(EnumAsString);
+	if(Found)
+		Value = *Found;
+
+	return Found != nullptr;
+}
+
+bool {{classname}}::Payload::EnumFromString(const FString& EnumAsString, {{classname}}::Payload::{{{enumName}}}& EnumValue)
+{
+	return FromString(EnumAsString, EnumValue);
+}
+
+inline void WriteJsonValue(JsonWriter& Writer, const {{classname}}::Payload::{{{enumName}}}& Value)
+{
+	WriteJsonValue(Writer, ToString(Value));
+}
+
+inline bool TryGetJsonValue(const TSharedPtr<FJsonValue>& JsonValue, {{classname}}::Payload::{{{enumName}}}& Value)
+{
+	FString TmpValue;
+	if (JsonValue->TryGetString(TmpValue))
+	{
+		if(FromString(TmpValue, Value))
+			return true;
+	}
+	return false;
+}
+
+{{/isEnum}}{{/vars}}{{/payload}}
 void {{classname}}::WriteJson(JsonWriter& Writer) const
 {
 	{{#isString}}
@@ -130,17 +234,43 @@ void {{classname}}::WriteJson(JsonWriter& Writer) const
 	{{/isString}}
 	{{^isString}}
 	Writer->WriteObjectStart();
-    {{#vars}}
+	{{#vars}}
 	{{#required}}
-	Writer->WriteIdentifierPrefix(TEXT("{{baseName}}")); WriteJsonValue(Writer, {{name}});
+	Writer->WriteIdentifierPrefix(TEXT("{{id}}")); WriteJsonValue(Writer, {{name}});
 	{{/required}}
 	{{^required}}
 	if ({{name}}.IsSet())
 	{
-		Writer->WriteIdentifierPrefix(TEXT("{{baseName}}")); WriteJsonValue(Writer, {{name}}.GetValue());
+		Writer->WriteIdentifierPrefix(TEXT("{{id}}")); WriteJsonValue(Writer, {{name}}.GetValue());
 	}
 	{{/required}}
     {{/vars}}
+	{{#headers}}
+    {{#vars}}
+	{{#required}}
+	Writer->WriteIdentifierPrefix(TEXT("{{id}}")); WriteJsonValue(Writer, Headers.{{name}});
+	{{/required}}
+	{{^required}}
+	if (Headers.{{name}}.IsSet())
+	{
+		Writer->WriteIdentifierPrefix(TEXT("{{id}}")); WriteJsonValue(Writer, Headers.{{name}}.GetValue());
+	}
+	{{/required}}
+    {{/vars}}
+	{{/headers}}
+	{{#payload}}
+    {{#vars}}
+	{{#required}}
+	Writer->WriteIdentifierPrefix(TEXT("{{id}}")); WriteJsonValue(Writer, Payload.{{name}});
+	{{/required}}
+	{{^required}}
+	if (Payload.{{name}}.IsSet())
+	{
+		Writer->WriteIdentifierPrefix(TEXT("{{id}}")); WriteJsonValue(Writer, Payload.{{name}}.GetValue());
+	}
+	{{/required}}
+    {{/vars}}
+	{{/payload}}
 	Writer->WriteObjectEnd();
 	{{/isString}}
 }
@@ -159,12 +289,32 @@ bool {{classname}}::FromJson(const TSharedPtr<FJsonValue>& JsonValue)
 
 	{{#vars}}
 	{{#required}}
-	{{^isWriteOnly}}ParseSuccess &= {{/isWriteOnly}}TryGetJsonValue(*Object, TEXT("{{baseName}}"), {{name}});
+	{{^isWriteOnly}}ParseSuccess &= {{/isWriteOnly}}TryGetJsonValue(*Object, TEXT("{{id}}"), {{name}});
 	{{/required}}
 	{{^required}}
-	ParseSuccess &= TryGetJsonValue(*Object, TEXT("{{baseName}}"), {{name}});
+	ParseSuccess &= TryGetJsonValue(*Object, TEXT("{{id}}"), {{name}});
 	{{/required}}
 	{{/vars}}
+	{{#headers}}
+	{{#vars}}
+	{{#required}}
+	{{^isWriteOnly}}ParseSuccess &= {{/isWriteOnly}}TryGetJsonValue(*Object, TEXT("{{id}}"), Headers.{{name}});
+	{{/required}}
+	{{^required}}
+	ParseSuccess &= TryGetJsonValue(*Object, TEXT("{{id}}"), Headers.{{name}});
+	{{/required}}
+	{{/vars}}
+	{{/headers}}
+	{{#payload}}
+	{{#vars}}
+	{{#required}}
+	{{^isWriteOnly}}ParseSuccess &= {{/isWriteOnly}}TryGetJsonValue(*Object, TEXT("{{id}}"), Payload.{{name}});
+	{{/required}}
+	{{^required}}
+	ParseSuccess &= TryGetJsonValue(*Object, TEXT("{{id}}"), Payload.{{name}});
+	{{/required}}
+	{{/vars}}
+	{{/payload}}
 
 	return ParseSuccess;
 	{{/isString}}

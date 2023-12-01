@@ -133,13 +133,14 @@ export function initView({ asyncapi, params }) {
     return view;
 }
 
-export function getSchemaView(id, schema, imports, exports) {
+export function getSchemaView(id, schema) {
+    //TODO: handle includes ! there is dependencies()
+
     const schemaView = {}
 
     if (id) {
         schemaView.id = id;
         schemaView.name = toCppValidPascalCase(id);
-        schemaView.classname = schemaView.name;
         schemaView.title = schema.title();
         schemaView.description = schema.description();
         schemaView.examples = schema.examples();
@@ -147,26 +148,24 @@ export function getSchemaView(id, schema, imports, exports) {
 
     if (schema.properties()) // object type
     {
+        // keep "classname" only for the actual classes
+        if (id)
+            schemaView.classname = schemaView.name;
+
         schemaView.vars = []
         for (const [id, property] of Object.entries(schema.properties())) {
             // Property is also a schema
-            const propView = getSchemaView(id, property, imports, exports);
+            const propView = getSchemaView(id, property);
             if (id) {
                 propView.required = schema.required?.().includes(id);
             }
 
             schemaView.vars.push(propView);
-        }
-
-        //TODO: should i use dependencies() for imports? we need to print all that
-
-        // export the type so it can be imported later
-        // probably this should actually be a map of some identifier to the generated classname, that would be more useful
-        exports.push(schemaView.classname);
+        }        
     }
     else if (schema.items() != null) // container type
     {
-        //TODO : !
+        //TODO : handle containers !
         throw new Error('Container type found and not currently handled : ${schema.id()}')
     }
     else {
@@ -174,11 +173,12 @@ export function getSchemaView(id, schema, imports, exports) {
             throw new Error(`Unknown type found: ${schema.type()} ${schema.id()}`);
         }
 
-        schemaView.dataType = toUnrealType(schema.type(), schema.format());
+        schemaView.datatype = toUnrealType(schema.type(), schema.format());
         schemaView.defaultValue = toDefaultValue(schema.type(), schema.format(), schema.default())
        
         if(schema.type() == "string")
         {
+            schemaView.isString = true;
             if(schema.enum())
             {
                 schemaView.isEnum = true;
@@ -193,15 +193,11 @@ export function getSchemaView(id, schema, imports, exports) {
                 for(const enumValue of schema.enum())
                 {
                     let enumVar = {};
-                    enumVar.value = JSON.stringify(enumValue);
+                    enumVar.value = enumValue;
                     enumVar.name = toCppValidPascalCase(enumVar.value);
                     schemaView.enumVars.push(enumVar);
                 }
-            }
-            else
-            {
-                schemaView.isString = true;
-            }
+            } 
         }        
     }
 
@@ -209,7 +205,7 @@ export function getSchemaView(id, schema, imports, exports) {
 }
 
 export function getMessageView(message) {
-    const messageView = {}
+    const messageView = {};
 
     messageView.name = message.name();
     messageView.title = message.title();
@@ -217,29 +213,42 @@ export function getMessageView(message) {
     messageView.examples = message.examples();
     messageView.classname = toCppValidPascalCase(message.name());
 
-    let imports = []
-    let exports = []
-
     if (message.hasHeaders()) {
-        messageView.headers = getSchemaView(null, message.headers(), imports, exports);
+        messageView.headers = getSchemaView(null, message.headers());
     }
 
     if (message.hasPayload()) {
-        messageView.payload = getSchemaView(null, message.payload(), imports, exports);
+        messageView.payload = getSchemaView(null, message.payload());
     }
 
     return messageView;
 }
 
-export function addChannelToView({ channel, view }) {
-    const channelView = {
-        ...view
-    };
+export function getTopicView(channel) {
+    const topicView = {};
 
-    channelView.id = channel.id();
-    channelView.classname = toCppValidPascalCase(channel.id());
-    channelView.description = channel.description();
+    topicView.id = channel.id();
+    topicView.name =channel.id();
+    topicView.classname = toCppValidPascalCase(channel.id());;
+    topicView.description = channel.description();
 
+    topicView.send = [];
+    topicView.receive = [];
+    
+    for(const operation of channel.operations())
+    {
+        for(const message of operation.messages())
+        {
+            const messageView = getMessageView(message);
+            if(operation.isSend())
+                messageView.isSend = true;
 
-    return channelView;
+            if(operation.isReceive())
+                messageView.isReceive = true;
+
+            topicView.send.push(messageView);
+        }
+    }
+
+    return topicView;
 }

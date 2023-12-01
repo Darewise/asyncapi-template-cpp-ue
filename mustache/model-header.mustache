@@ -6,19 +6,28 @@
 {{/imports}}
 
 {{#cppNamespaceDeclarations}}
-namespace {{this}}
+namespace {{.}}
 {
 {{/cppNamespaceDeclarations}}
 {{#models}}
 
 /*
- * {{classname}}
+{{#classname}}
+ * {{.}}
  *
- * {{title}}
+ {{/classname}}
+ {{#title}}
+ * {{.}}
  *
- * {{description}}
+ {{/title}}
+ {{#description}}
+ * {{.}}
  *
- * {{examples}}
+ {{/description}}
+ {{#examples}}
+ * {{.}}
+ *
+ {{/examples}}
  */
 class {{dllapi}} {{classname}} : public Model
 {
@@ -45,7 +54,7 @@ public:
 	FString Value{{#defaultValue}} = {{{.}}}{{/defaultValue}};
 	{{/isEnum}}
 	{{/isString}}
-    {{#vars}}
+	{{#vars}}
 	{{#isEnum}}
 	enum class {{{enumName}}}
 	{
@@ -57,13 +66,68 @@ public:
 	static FString EnumToString(const {{{enumName}}}& EnumValue);
 	static bool EnumFromString(const FString& EnumAsString, {{{enumName}}}& EnumValue);
 	{{#description}}/* {{{.}}} */
-	{{/description}}{{^required}}TOptional<{{/required}}{{{datatypeWithEnum}}}{{^required}}>{{/required}} {{name}}{{#required}}{{#defaultValue}} = {{{.}}}{{/defaultValue}}{{/required}};
+	{{/description}}{{#examples}}/* Example: {{{.}}} */
+	{{/examples}}{{^required}}TOptional<{{/required}}{{{datatypeWithEnum}}}{{^required}}>{{/required}} {{name}}{{#required}}{{#defaultValue}} = {{{.}}}{{/defaultValue}}{{/required}};
 	{{/isEnum}}
 	{{^isEnum}}
 	{{#description}}/* {{{.}}} */
-	{{/description}}{{^required}}TOptional<{{/required}}{{{datatype}}}{{^required}}>{{/required}} {{name}}{{#required}}{{#defaultValue}} = {{{.}}}{{/defaultValue}}{{/required}};
+	{{/description}}{{#examples}}/* Example: {{{.}}} */
+	{{/examples}}{{^required}}TOptional<{{/required}}{{{datatype}}}{{^required}}>{{/required}} {{name}}{{#required}}{{#defaultValue}} = {{{.}}}{{/defaultValue}}{{/required}};
 	{{/isEnum}}
     {{/vars}}
+	{{#headers}}
+	struct Headers
+	{
+    	{{#vars}}
+		{{#isEnum}}
+		enum class {{{enumName}}}
+		{
+			{{#enumVars}}
+			{{name}},
+			{{/enumVars}}
+  		};
+
+		static FString EnumToString(const {{{enumName}}}& EnumValue);
+		static bool EnumFromString(const FString& EnumAsString, {{{enumName}}}& EnumValue);
+		{{#description}}/* {{{.}}} */
+		{{/description}}{{#examples}}/* Example: {{{.}}} */
+		{{/examples}}{{^required}}TOptional<{{/required}}{{{datatypeWithEnum}}}{{^required}}>{{/required}} {{name}}{{#required}}{{#defaultValue}} = {{{.}}}{{/defaultValue}}{{/required}};
+		{{/isEnum}}
+		{{^isEnum}}
+		{{#description}}/* {{{.}}} */
+		{{/description}}{{#examples}}/* Example: {{{.}}} */
+		{{/examples}}{{^required}}TOptional<{{/required}}{{{datatype}}}{{^required}}>{{/required}} {{name}}{{#required}}{{#defaultValue}} = {{{.}}}{{/defaultValue}}{{/required}};
+		{{/isEnum}}
+	    {{/vars}}
+	} Headers;
+
+	{{/headers}}
+	{{#payload}}
+	struct Payload
+	{
+    	{{#vars}}
+		{{#isEnum}}
+		enum class {{{enumName}}}
+		{
+			{{#enumVars}}
+			{{name}},
+			{{/enumVars}}
+  		};
+
+		static FString EnumToString(const {{{enumName}}}& EnumValue);
+		static bool EnumFromString(const FString& EnumAsString, {{{enumName}}}& EnumValue);
+		{{#description}}/* {{{.}}} */
+		{{/description}}{{#examples}}/* Example: {{{.}}} */
+		{{/examples}}{{^required}}TOptional<{{/required}}{{{datatypeWithEnum}}}{{^required}}>{{/required}} {{name}}{{#required}}{{#defaultValue}} = {{{.}}}{{/defaultValue}}{{/required}};
+		{{/isEnum}}
+		{{^isEnum}}
+		{{#description}}/* {{{.}}} */
+		{{/description}}{{#examples}}/* Example: {{{.}}} */
+		{{/examples}}{{^required}}TOptional<{{/required}}{{{datatype}}}{{^required}}>{{/required}} {{name}}{{#required}}{{#defaultValue}} = {{{.}}}{{/defaultValue}}{{/required}};
+		{{/isEnum}}
+    	{{/vars}}
+	} Payload;
+	{{/payload}}
 };
 
 {{/models}}

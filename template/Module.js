@@ -19,14 +19,11 @@ export default function({ asyncapi, params }) {
 
   const view = initView({ asyncapi, params });
 
-  const modelNamePrefix = "modelNamePrefix";
-  const unrealModuleName = "module";
-
   // only include if it's in the parameters
   if(params.buildProjectFiles)
   {
     const projectFiles = [
-      <File name={`${unrealModuleName}.Build.cs`}>
+      <File name={`${view.unrealModuleName}.Build.cs`}>
         <Mustache template="mustache/Build.cs.mustache" data={view} />
       </File>
     ];

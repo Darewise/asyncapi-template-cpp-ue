@@ -8,11 +8,28 @@
 {{/imports}}
 
 {{#cppNamespaceDeclarations}}
-namespace {{this}}
+namespace {{.}}
 {
 {{/cppNamespaceDeclarations}}
 
-{{description}}
+/*
+{{#classname}}
+ * {{.}}
+ *
+ {{/classname}}
+ {{#title}}
+ * {{.}}
+ *
+ {{/title}}
+ {{#description}}
+ * {{.}}
+ *
+ {{/description}}
+ {{#examples}}
+ * {{.}}
+ *
+ {{/examples}}
+ */
 class {{dllapi}} {{classname}}
 {
 public:
@@ -22,11 +39,11 @@ public:
     {{#operations}}{{#operation}}DECLARE_DELEGATE_OneParam(F{{operationIdCamelCase}}Delegate, const {{operationIdCamelCase}}&);
     {{/operation}}{{/operations}}
     {{#operations}}{{#operation}}{{#description}}/* {{{.}}} */
-	{{/description}}void PublishEvent(const {{operationIdCamelCase}}&) const;
+	{{/description}}virtual void PublishEvent(const {{operationIdCamelCase}}&) const;
     {{/operation}}{{/operations}}
 
 private:
-	void PublishEvent(const FString& a_jsonBody);
+	virtual void PublishEvent(const FString& a_jsonBody);
 };
 
 {{#cppNamespaceDeclarations}}
