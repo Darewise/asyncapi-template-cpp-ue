@@ -1,8 +1,10 @@
 {{>licenseInfo}}
 #include "{{classname}}.h"
 
-#include "{{classname}}Operations.h"
 #include "{{unrealModuleName}}Module.h"
+{{#operations}}
+#include "{{modelNamePrefix}}{{classname}}.h"
+{{/operations}}
 
 #include "Serialization/JsonSerializer.h"
 
@@ -13,32 +15,56 @@ namespace {{.}}
 
 bool {{classname}}::ProcessEvent(const FString& InEventString) const
 {
-	return false; // TODO parse into json
+	TSharedPtr<FJsonValue> JsonValue;
+	auto Reader = TJsonReaderFactory<>::Create(InEventString);
+
+	if (FJsonSerializer::Deserialize(Reader, JsonValue) && JsonValue.IsValid())
+	{
+		return ProcessEvent(JsonValue);
+	}
+	return false;
 }
 
-bool {{classname}}::ProcessEvent(const TSharedRef<FJsonObject>& InEventJson) const
+bool {{classname}}::ProcessEvent(const TSharedPtr<FJsonValue>& InEventJson) const
 {
-	DW_ASSERT(a_eventJson);
+	// Note: there could be a better way but for now we try to serialize all events until one matches
+	check(InEventJson);
 
-	// TODO: implement this part !
+	{{#operations}}
+	{{#isReceive}}
+	{
+		{{classname}} Event;
+		if(Event.FromJson(InEventJson))
+		{
+			On{{classname}}Received.Broadcast(Event);
+			return true;
+		}
+	}
+	{{/isReceive}}
+	{{/operations}}
+	return false;
 }
 
 {{#operations}}
-{{#operation}}
-void {{classname}}::PublishEvent(const {{operationIdCamelCase}}& Event) const
+{{#isSend}}
+void {{topicClassName}}::PublishEvent(const {{classname}}& Event) const
 {
 	FString JsonBody;
 	JsonWriter Writer = TJsonWriterFactory<>::Create(&JsonBody);
 
-	WriteJsonValue(Writer, Event);
+	Event.WriteJson(Writer);
 	Writer->Close();
-
 
 	PublishEvent(JsonBody);
 }
 
-{{/operation}}
+{{/isSend}}
 {{/operations}}
+void {{topicClassName}}::PublishEvent(const FString& InEventString) const
+{
+	OnMessagePublished.ExecuteIfBound(InEventString);
+}
+
 {{#cppNamespaceDeclarations}}
 }
 {{/cppNamespaceDeclarations}}

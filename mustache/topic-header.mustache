@@ -4,13 +4,14 @@
 #include "CoreMinimal.h"
 #include "{{modelNamePrefix}}BaseModel.h"
 
-{{#imports}}{{{import}}}
-{{/imports}}
-
 {{#cppNamespaceDeclarations}}
 namespace {{.}}
 {
 {{/cppNamespaceDeclarations}}
+
+{{#operations}}
+class {{classname}};
+{{/operations}}
 
 /*
 {{#classname}}
@@ -33,17 +34,26 @@ namespace {{.}}
 class {{dllapi}} {{classname}}
 {
 public:
+    virtual ~{{classname}}() {}
 	bool ProcessEvent(const FString& InEventString) const;
-	bool ProcessEvent(const TSharedRef<FJsonObject>& InEventJson) const;
+	bool ProcessEvent(const TSharedPtr<FJsonValue>& InEventJson) const;
 
-    {{#operations}}{{#operation}}DECLARE_DELEGATE_OneParam(F{{operationIdCamelCase}}Delegate, const {{operationIdCamelCase}}&);
-    {{/operation}}{{/operations}}
-    {{#operations}}{{#operation}}{{#description}}/* {{{.}}} */
-	{{/description}}virtual void PublishEvent(const {{operationIdCamelCase}}&) const;
-    {{/operation}}{{/operations}}
+    {{#operations}}{{#isReceive}}
+    {{#description}}/* {{{.}}} */
+    {{/description}}DECLARE_MULTICAST_DELEGATE_OneParam(F{{classname}}Delegate, const {{classname}}&);
+    F{{classname}}Delegate On{{classname}}Received;
+    {{/isReceive}}
+    {{/operations}}
 
-private:
-	virtual void PublishEvent(const FString& a_jsonBody);
+    {{#operations}}{{#isSend}}
+    {{#description}}/* {{{.}}} */
+	{{/description}}void PublishEvent(const {{classname}}&) const;
+    {{/isSend}}{{/operations}}
+
+    DECLARE_DELEGATE_OneParam(FPublishDelegate, const FString&)
+    FPublishDelegate OnMessagePublished;
+protected:
+	void PublishEvent(const FString& InEventString) const;
 };
 
 {{#cppNamespaceDeclarations}}

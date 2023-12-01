@@ -230,15 +230,16 @@ export function getTopicView(channel) {
     topicView.id = channel.id();
     topicView.name =channel.id();
     topicView.classname = toCppValidPascalCase(channel.id());;
+    topicView.topicClassName = topicView.classname;
     topicView.description = channel.description();
 
-    topicView.send = [];
-    topicView.receive = [];
+    topicView.operations = [];
     
     for(const operation of channel.operations())
     {
         for(const message of operation.messages())
         {
+            //TODO: this doesn't take into account that messages may be repeated across operations
             const messageView = getMessageView(message);
             if(operation.isSend())
                 messageView.isSend = true;
@@ -246,7 +247,7 @@ export function getTopicView(channel) {
             if(operation.isReceive())
                 messageView.isReceive = true;
 
-            topicView.send.push(messageView);
+            topicView.operations.push(messageView);
         }
     }
 
