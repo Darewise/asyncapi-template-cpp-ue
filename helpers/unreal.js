@@ -31,7 +31,6 @@ function isPrimitiveType(type) {
         'uuid',
         'anytype',
         'any',
-        'object', // considered a primitive type here because we will save it as Json
     ];
 
     return primitiveTypes.includes(type.toLowerCase());
@@ -69,12 +68,10 @@ function toUnrealType(type, format) {
 
     // Use the format first as it's more specific, if not the type, and defaulting to the input
     // ex: https://www.asyncapi.com/docs/reference/specification/v2.6.0#dataTypeFormat
-    if(format)
-    {
+    if (format) {
         return typeMapping[format.toLowerCase()] || typeMapping[type.toLowerCase()] || type;
     }
-    else
-    {
+    else {
         return typeMapping[type.toLowerCase()] || type;
     }
 }
@@ -90,22 +87,20 @@ function toDefaultValue(type, format, defaultValue) {
         'double'
     ];
 
-    if(type == "string" && defaultValue != undefined)
-    {
+    if (type == "string" && defaultValue != undefined) {
         return "TEXT(" + defaultValue + ")";
     }
-    else if(numberTypes.includes(type))
-    {
-        if(!defaultValue)
+    else if (numberTypes.includes(type)) {
+        if (!defaultValue)
             return "0";
     }
-    else if(type == "boolean")
-    {
-        if(defaultValue == "true" || defaultValue == "false")
+    else if (type == "boolean") {
+        if (defaultValue == "true" || defaultValue == "false")
             return defaultValue;
         else
             return "false";
     }
+
     return defaultValue;
 }
 
@@ -133,6 +128,14 @@ export function initView({ asyncapi, params }) {
     return view;
 }
 
+function makeContextualTypeName(schemaView, contextId) {
+    // Attempts to improve anonymous typenames if possible, based on context
+    if (schemaView.isCppObject && contextId && schemaView.classname?.startsWith('Anonymous')) {
+        schemaView.classname = toCppValidPascalCase(contextId) + '_Type';
+        schemaView.datatype = schemaView.classname;
+    }
+}
+
 export function getSchemaView(id, schema) {
     //TODO: handle includes ! there is dependencies()
 
@@ -146,27 +149,59 @@ export function getSchemaView(id, schema) {
         schemaView.examples = schema.examples();
     }
 
-    if (schema.properties()) // object type
+    if (schema.properties()) // Object with properties = struct definition
     {
         // keep "classname" only for the actual classes
-        if (id)
-            schemaView.classname = schemaView.name;
+        schemaView.classname = toCppValidPascalCase(schema.id());
+        schemaView.datatype = schemaView.classname;
+        schemaView.isCppObject = true; // We will use this flag to build a list of models later
 
         schemaView.vars = []
-        for (const [id, property] of Object.entries(schema.properties())) {
+        for (const [childId, property] of Object.entries(schema.properties())) {
             // Property is also a schema
-            const propView = getSchemaView(id, property);
-            if (id) {
-                propView.required = schema.required?.().includes(id);
+            const propView = getSchemaView(childId, property);
+
+            if (childId) {
+                propView.required = schema.required?.()?.includes(childId);
+                makeContextualTypeName(propView, childId);
             }
 
             schemaView.vars.push(propView);
-        }        
+        }
     }
-    else if (schema.items() != null) // container type
+    else if (schema.type() == 'object') // object type that doesn't have properties
     {
-        //TODO : handle containers !
-        throw new Error('Container type found and not currently handled : ${schema.id()}')
+        if (schema.additionalProperties()) {
+            // No properties but additional Properties = map
+            // https://swagger.io/docs/specification/data-models/dictionaries/
+
+            if (schema.additionalProperties() == true) // we can't tell what is in here
+                schemaView.datatype = 'TMap<FString, FJsonValue>';
+            else {
+                const valueSchemaView = getSchemaView(null, schema.additionalProperties());
+                makeContextualTypeName(valueSchemaView, id);
+                schemaView.datatype = "TMap<FString, " + valueSchemaView.datatype + ">";
+                //TODO: this should trigger an import or add a model !, we first have to determine if it'sa dependency or not, and perhaps only the dependencies() thing can help us with that, otherwise we have to assume the type is either primitive or an anonymous model
+            }
+            schemaView.isMap = true;
+        }
+        else // object treated as primitive type by default
+        {
+            schemaView.datatype = toUnrealType(schema.type(), schema.format());
+        }
+    }
+    else if (schema.type() == 'array') // container type
+    {
+        // If items undefined or array, we don' t know how to handle polymorphic arrays in C++
+        if (schema.items?.()?.length > 1) {
+            throw new Error(`Can't handle array type: ${schema.id()}`);
+        }
+
+        const itemSchemaView = getSchemaView(null, Array.isArray(schema.items()) ? schema.items()[0] : schema.items());
+        makeContextualTypeName(itemSchemaView, id);
+
+        schemaView.datatype = "TArray<" + itemSchemaView.datatype + ">";
+        schemaView.isArray = true;
     }
     else {
         if (!isPrimitiveType(schema.type())) {
@@ -175,30 +210,26 @@ export function getSchemaView(id, schema) {
 
         schemaView.datatype = toUnrealType(schema.type(), schema.format());
         schemaView.defaultValue = toDefaultValue(schema.type(), schema.format(), schema.default())
-       
-        if(schema.type() == "string")
-        {
+
+        if (schema.type() == "string") {
             schemaView.isString = true;
-            if(schema.enum())
-            {
+            if (schema.enum()) {
                 schemaView.isEnum = true;
 
-                if(id)
-                {
+                if (id) {
                     schemaView.enumName = schemaView.name + "Values";
                     schemaView.datatypeWithEnum = schemaView.enumName;
                 }
-                
+
                 schemaView.enumVars = [];
-                for(const enumValue of schema.enum())
-                {
+                for (const enumValue of schema.enum()) {
                     let enumVar = {};
                     enumVar.value = enumValue;
                     enumVar.name = toCppValidPascalCase(enumVar.value);
                     schemaView.enumVars.push(enumVar);
                 }
-            } 
-        }        
+            }
+        }
     }
 
     return schemaView;
@@ -228,23 +259,21 @@ export function getTopicView(channel) {
     const topicView = {};
 
     topicView.id = channel.id();
-    topicView.name =channel.id();
+    topicView.name = channel.id();
     topicView.classname = toCppValidPascalCase(channel.id());;
     topicView.topicClassName = topicView.classname;
     topicView.description = channel.description();
 
     topicView.operations = [];
-    
-    for(const operation of channel.operations())
-    {
-        for(const message of operation.messages())
-        {
+
+    for (const operation of channel.operations()) {
+        for (const message of operation.messages()) {
             //TODO: this doesn't take into account that messages may be repeated across operations
             const messageView = getMessageView(message);
-            if(operation.isSend())
+            if (operation.isSend())
                 messageView.isSend = true;
 
-            if(operation.isReceive())
+            if (operation.isReceive())
                 messageView.isReceive = true;
 
             topicView.operations.push(messageView);
