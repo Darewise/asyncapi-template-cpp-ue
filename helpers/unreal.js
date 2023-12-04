@@ -140,6 +140,8 @@ export function getSchemaView(id, schema) {
     //TODO: handle includes ! there is dependencies()
 
     const schemaView = {}
+    schemaView.asyncapi_schema = schema;
+    schemaView.asyncapi_id = id;
 
     if (id) {
         schemaView.id = id;
@@ -181,6 +183,7 @@ export function getSchemaView(id, schema) {
                 const valueSchemaView = getSchemaView(null, schema.additionalProperties());
                 makeContextualTypeName(valueSchemaView, id);
                 schemaView.datatype = "TMap<FString, " + valueSchemaView.datatype + ">";
+                schemaView.models = [valueSchemaView];
                 //TODO: this should trigger an import or add a model !, we first have to determine if it'sa dependency or not, and perhaps only the dependencies() thing can help us with that, otherwise we have to assume the type is either primitive or an anonymous model
             }
             schemaView.isMap = true;
@@ -202,6 +205,7 @@ export function getSchemaView(id, schema) {
 
         schemaView.datatype = "TArray<" + itemSchemaView.datatype + ">";
         schemaView.isArray = true;
+        schemaView.models = [itemSchemaView];
     }
     else {
         if (!isPrimitiveType(schema.type())) {
@@ -235,21 +239,63 @@ export function getSchemaView(id, schema) {
     return schemaView;
 }
 
+export function collectAllModels(view)
+{
+    // Not super proud of this design but essentially we first constructed a massive tree of schemas, 
+    // now we parse it again to pull all the models back to the top list that we will later generate.
+    const models = []
+
+    if(view.models)
+    {
+        view.models.forEach((varSchemaView) => {
+            models.push(...collectAllModels(varSchemaView));
+          });
+
+        models.push(...view.models);
+    }
+
+    if(view.isCppObject)
+    {
+        view.vars.forEach((varSchemaView) => {
+            models.push(...collectAllModels(varSchemaView));
+          });
+
+        if(!view.ignoreModel)
+            models.push(view);
+    }
+    else if(view.isMessage)
+    {
+        if(view.headers)
+            models.push(...collectAllModels(view.headers));
+
+        if(view.payload)
+            models.push(...collectAllModels(view.payload));
+
+        models.push(view);
+    }
+
+    return models;
+}
+
 export function getMessageView(message) {
     const messageView = {};
+    messageView.asyncapi_message = message;
 
     messageView.name = message.name();
     messageView.title = message.title();
     messageView.description = message.description();
     messageView.examples = message.examples();
     messageView.classname = toCppValidPascalCase(message.name());
+    messageView.isMessage = true;
 
     if (message.hasHeaders()) {
         messageView.headers = getSchemaView(null, message.headers());
+        messageView.headers.ignoreModel = true;
     }
 
     if (message.hasPayload()) {
         messageView.payload = getSchemaView(null, message.payload());
+        messageView.payload.ignoreModel = true;
     }
 
     return messageView;
@@ -257,6 +303,7 @@ export function getMessageView(message) {
 
 export function getTopicView(channel) {
     const topicView = {};
+    topicView.asyncapi_channel = channel;
 
     topicView.id = channel.id();
     topicView.name = channel.id();

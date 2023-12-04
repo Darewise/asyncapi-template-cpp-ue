@@ -3,7 +3,7 @@ import { File, Text, render } from '@asyncapi/generator-react-sdk';
 
 // Import custom components from file 
 import { Mustache } from '../../components/mustache';
-import { initView, getMessageView, getTopicView } from '../../helpers/unreal';
+import { initView, getMessageView, getTopicView, collectAllModels } from '../../helpers/unreal';
 
 export default function ({ asyncapi, params }) {
 
@@ -23,7 +23,7 @@ export default function ({ asyncapi, params }) {
   let messageFiles = []
   asyncapi.allMessages().forEach((message) => {
     const messageView = getMessageView(message);
-    const fullView = { ...view , models: { ...messageView }};
+    const fullView = { ...view , models: collectAllModels(messageView) };
     fullView.filename = modelNamePrefix + messageView.classname;
 
     messageFiles.push(
