@@ -118,29 +118,29 @@ inline bool TryGetJsonValue(const TSharedPtr<FJsonValue>& JsonValue, {{classname
 
 {{/isEnum}}{{/vars}}
 {{#headers}}{{#vars}}{{#isEnum}}
-inline FString ToString(const {{classname}}::Headers::{{{enumName}}}& Value)
+inline FString ToString(const {{messageClassname}}::Headers::{{{enumName}}}& Value)
 {
 	switch (Value)
 	{
 	{{#enumVars}}
-	case {{classname}}::Headers::{{{enumName}}}::{{name}}:
+	case {{messageClassname}}::Headers::{{{enumName}}}::{{name}}:
 		return TEXT("{{{value}}}");
 	{{/enumVars}}
 	}
 
-	UE_LOG(Log{{unrealModuleName}}, Error, TEXT("Invalid {{classname}}::Headers::{{{enumName}}} Value (%d)"), (int)Value);
+	UE_LOG(Log{{unrealModuleName}}, Error, TEXT("Invalid {{messageClassname}}::Headers::{{{enumName}}} Value (%d)"), (int)Value);
 	return TEXT("");
 }
 
-FString {{classname}}::Headers::EnumToString(const {{classname}}::Headers::{{{enumName}}}& EnumValue)
+FString {{messageClassname}}::Headers::EnumToString(const {{messageClassname}}::Headers::{{{enumName}}}& EnumValue)
 {
 	return ToString(EnumValue);
 }
 
-inline bool FromString(const FString& EnumAsString, {{classname}}::Headers::{{{enumName}}}& Value)
+inline bool FromString(const FString& EnumAsString, {{messageClassname}}::Headers::{{{enumName}}}& Value)
 {
-	static TMap<FString, {{classname}}::Headers::{{{enumName}}}> StringToEnum = { {{#enumVars}}
-		{ TEXT("{{{value}}}"), {{classname}}::Headers::{{{enumName}}}::{{name}} },{{/enumVars}} };
+	static TMap<FString, {{messageClassname}}::Headers::{{{enumName}}}> StringToEnum = { {{#enumVars}}
+		{ TEXT("{{{value}}}"), {{messageClassname}}::Headers::{{{enumName}}}::{{name}} },{{/enumVars}} };
 
 	const auto Found = StringToEnum.Find(EnumAsString);
 	if(Found)
@@ -149,17 +149,17 @@ inline bool FromString(const FString& EnumAsString, {{classname}}::Headers::{{{e
 	return Found != nullptr;
 }
 
-bool {{classname}}::Headers::EnumFromString(const FString& EnumAsString, {{classname}}::Headers::{{{enumName}}}& EnumValue)
+bool {{messageClassname}}::Headers::EnumFromString(const FString& EnumAsString, {{messageClassname}}::Headers::{{{enumName}}}& EnumValue)
 {
 	return FromString(EnumAsString, EnumValue);
 }
 
-inline void WriteJsonValue(JsonWriter& Writer, const {{classname}}::Payload::{{{enumName}}}& Value)
+inline void WriteJsonValue(JsonWriter& Writer, const {{messageClassname}}::Payload::{{{enumName}}}& Value)
 {
 	WriteJsonValue(Writer, ToString(Value));
 }
 
-inline bool TryGetJsonValue(const TSharedPtr<FJsonValue>& JsonValue, {{classname}}::Payload::{{{enumName}}}& Value)
+inline bool TryGetJsonValue(const TSharedPtr<FJsonValue>& JsonValue, {{messageClassname}}::Payload::{{{enumName}}}& Value)
 {
 	FString TmpValue;
 	if (JsonValue->TryGetString(TmpValue))
@@ -172,29 +172,29 @@ inline bool TryGetJsonValue(const TSharedPtr<FJsonValue>& JsonValue, {{classname
 
 {{/isEnum}}{{/vars}}{{/headers}}
 {{#payload}}{{#vars}}{{#isEnum}}
-inline FString ToString(const {{classname}}::Payload::{{{enumName}}}& Value)
+inline FString ToString(const {{messageClassname}}::Payload::{{{enumName}}}& Value)
 {
 	switch (Value)
 	{
 	{{#enumVars}}
-	case {{classname}}::Payload::{{{enumName}}}::{{name}}:
+	case {{messageClassname}}::Payload::{{{enumName}}}::{{name}}:
 		return TEXT("{{{value}}}");
 	{{/enumVars}}
 	}
 
-	UE_LOG(Log{{unrealModuleName}}, Error, TEXT("Invalid {{classname}}::Payload::{{{enumName}}} Value (%d)"), (int)Value);
+	UE_LOG(Log{{unrealModuleName}}, Error, TEXT("Invalid {{messageClassname}}::Payload::{{{enumName}}} Value (%d)"), (int)Value);
 	return TEXT("");
 }
 
-FString {{classname}}::Payload::EnumToString(const {{classname}}::Payload::{{{enumName}}}& EnumValue)
+FString {{messageClassname}}::Payload::EnumToString(const {{messageClassname}}::Payload::{{{enumName}}}& EnumValue)
 {
 	return ToString(EnumValue);
 }
 
-inline bool FromString(const FString& EnumAsString, {{classname}}::Payload::{{{enumName}}}& Value)
+inline bool FromString(const FString& EnumAsString, {{messageClassname}}::Payload::{{{enumName}}}& Value)
 {
-	static TMap<FString, {{classname}}::Payload::{{{enumName}}}> StringToEnum = { {{#enumVars}}
-		{ TEXT("{{{value}}}"), {{classname}}::Payload::{{{enumName}}}::{{name}} },{{/enumVars}} };
+	static TMap<FString, {{messageClassname}}::Payload::{{{enumName}}}> StringToEnum = { {{#enumVars}}
+		{ TEXT("{{{value}}}"), {{messageClassname}}::Payload::{{{enumName}}}::{{name}} },{{/enumVars}} };
 
 	const auto Found = StringToEnum.Find(EnumAsString);
 	if(Found)
@@ -203,17 +203,17 @@ inline bool FromString(const FString& EnumAsString, {{classname}}::Payload::{{{e
 	return Found != nullptr;
 }
 
-bool {{classname}}::Payload::EnumFromString(const FString& EnumAsString, {{classname}}::Payload::{{{enumName}}}& EnumValue)
+bool {{messageClassname}}::Payload::EnumFromString(const FString& EnumAsString, {{messageClassname}}::Payload::{{{enumName}}}& EnumValue)
 {
 	return FromString(EnumAsString, EnumValue);
 }
 
-inline void WriteJsonValue(JsonWriter& Writer, const {{classname}}::Payload::{{{enumName}}}& Value)
+inline void WriteJsonValue(JsonWriter& Writer, const {{messageClassname}}::Payload::{{{enumName}}}& Value)
 {
 	WriteJsonValue(Writer, ToString(Value));
 }
 
-inline bool TryGetJsonValue(const TSharedPtr<FJsonValue>& JsonValue, {{classname}}::Payload::{{{enumName}}}& Value)
+inline bool TryGetJsonValue(const TSharedPtr<FJsonValue>& JsonValue, {{messageClassname}}::Payload::{{{enumName}}}& Value)
 {
 	FString TmpValue;
 	if (JsonValue->TryGetString(TmpValue))

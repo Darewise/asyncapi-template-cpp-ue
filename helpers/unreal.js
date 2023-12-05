@@ -131,14 +131,19 @@ export function initView({ asyncapi, params }) {
 function makeContextualTypeName(schemaView, contextId) {
     // Attempts to improve anonymous typenames if possible, based on context
     if (schemaView.isCppObject && contextId && schemaView.classname?.startsWith('Anonymous')) {
-        schemaView.classname = toCppValidPascalCase(contextId) + '_Type';
+        const uniqueDigits = schemaView.classname.replace(/\D/g, '');
+        schemaView.classname = toCppValidPascalCase(contextId) + uniqueDigits + '_Type';
         schemaView.datatype = schemaView.classname;
     }
 }
 
 export function getSchemaView(id, schema) {
     //TODO: handle includes ! there is dependencies()
-
+    if(schema.dependencies())
+    {
+        console.log(`dependency found : ${schema.dependencies()}`);
+    }
+   
     const schemaView = {}
     schemaView.asyncapi_schema = schema;
     schemaView.asyncapi_id = id;
@@ -151,7 +156,12 @@ export function getSchemaView(id, schema) {
         schemaView.examples = schema.examples();
     }
 
-    if (schema.properties()) // Object with properties = struct definition
+    if(schema.isCircular())
+    {
+        // We do not support circular schemas in C++, fall back to "any" behavior
+        schemaView.datatype = toUnrealType('any');
+    }
+    else if (schema.properties()) // Object with properties = struct definition
     {
         // keep "classname" only for the actual classes
         schemaView.classname = toCppValidPascalCase(schema.id());
@@ -184,7 +194,6 @@ export function getSchemaView(id, schema) {
                 makeContextualTypeName(valueSchemaView, id);
                 schemaView.datatype = "TMap<FString, " + valueSchemaView.datatype + ">";
                 schemaView.models = [valueSchemaView];
-                //TODO: this should trigger an import or add a model !, we first have to determine if it'sa dependency or not, and perhaps only the dependencies() thing can help us with that, otherwise we have to assume the type is either primitive or an anonymous model
             }
             schemaView.isMap = true;
         }
@@ -195,17 +204,19 @@ export function getSchemaView(id, schema) {
     }
     else if (schema.type() == 'array') // container type
     {
-        // If items undefined or array, we don' t know how to handle polymorphic arrays in C++
+        // C+++ doesn't handle "variant" arrays, and we don't want to use TVariant here, fall back to "any" behavior
         if (schema.items?.()?.length > 1) {
-            throw new Error(`Can't handle array type: ${schema.id()}`);
+            schemaView.datatype = toUnrealType('any');
         }
-
-        const itemSchemaView = getSchemaView(null, Array.isArray(schema.items()) ? schema.items()[0] : schema.items());
-        makeContextualTypeName(itemSchemaView, id);
-
-        schemaView.datatype = "TArray<" + itemSchemaView.datatype + ">";
-        schemaView.isArray = true;
-        schemaView.models = [itemSchemaView];
+        else
+        {
+            const itemSchemaView = getSchemaView(null, Array.isArray(schema.items()) ? schema.items()[0] : schema.items());
+            makeContextualTypeName(itemSchemaView, id);
+    
+            schemaView.datatype = "TArray<" + itemSchemaView.datatype + ">";
+            schemaView.isArray = true;
+            schemaView.models = [itemSchemaView];
+        }
     }
     else {
         if (!isPrimitiveType(schema.type())) {
@@ -250,8 +261,6 @@ export function collectAllModels(view)
         view.models.forEach((varSchemaView) => {
             models.push(...collectAllModels(varSchemaView));
           });
-
-        models.push(...view.models);
     }
 
     if(view.isCppObject)
@@ -286,7 +295,8 @@ export function getMessageView(message) {
     messageView.description = message.description();
     messageView.examples = message.examples();
     messageView.classname = toCppValidPascalCase(message.name());
-    messageView.isMessage = true;
+    messageView.messageClassname = messageView.classname;
+    messageView.isMessage = true;    
 
     if (message.hasHeaders()) {
         messageView.headers = getSchemaView(null, message.headers());
