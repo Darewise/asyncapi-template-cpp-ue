@@ -24,7 +24,7 @@ export default function({ asyncapi, params }) {
   {
     const projectFiles = [
       <File name={`${view.unrealModuleName}.Build.cs`}>
-        <Mustache template="mustache/Build.cs.mustache" data={view} />
+        <Mustache template="Build.cs.mustache" data={view} />
       </File>
     ];
 

@@ -1,6 +1,9 @@
 // Here we parse the asyncapi object into a format suitable for our mustache files
 
-export function toCppValidPascalCase(input) {
+import { File, Text, render } from '@asyncapi/generator-react-sdk';
+import { Mustache } from '../components/mustache';
+
+function toCppValidPascalCase(input) {
     const sanitized = input.replace(/[^a-zA-Z0-9]+/g, '_');
 
     // Ensure the first letter and each letter following underscores are uppercase
@@ -137,13 +140,12 @@ function makeContextualTypeName(schemaView, contextId) {
     }
 }
 
-export function getSchemaView(id, schema) {
+function getSchemaView(id, schema) {
     //TODO: handle includes ! there is dependencies()
-    if(schema.dependencies())
-    {
+    if (schema.dependencies()) {
         console.log(`dependency found : ${schema.dependencies()}`);
     }
-   
+
     const schemaView = {}
     schemaView.asyncapi_schema = schema;
     schemaView.asyncapi_id = id;
@@ -156,8 +158,7 @@ export function getSchemaView(id, schema) {
         schemaView.examples = schema.examples();
     }
 
-    if(schema.isCircular())
-    {
+    if (schema.isCircular()) {
         // We do not support circular schemas in C++, fall back to "any" behavior
         schemaView.datatype = toUnrealType('any');
     }
@@ -208,11 +209,10 @@ export function getSchemaView(id, schema) {
         if (schema.items?.()?.length > 1) {
             schemaView.datatype = toUnrealType('any');
         }
-        else
-        {
+        else {
             const itemSchemaView = getSchemaView(null, Array.isArray(schema.items()) ? schema.items()[0] : schema.items());
             makeContextualTypeName(itemSchemaView, id);
-    
+
             schemaView.datatype = "TArray<" + itemSchemaView.datatype + ">";
             schemaView.isArray = true;
             schemaView.models = [itemSchemaView];
@@ -250,34 +250,30 @@ export function getSchemaView(id, schema) {
     return schemaView;
 }
 
-export function collectAllModels(view)
-{
+export function collectAllModels(view) {
     // Not super proud of this design but essentially we first constructed a massive tree of schemas, 
     // now we parse it again to pull all the models back to the top list that we will later generate.
     const models = []
 
-    if(view.models)
-    {
+    if (view.models) {
         view.models.forEach((varSchemaView) => {
             models.push(...collectAllModels(varSchemaView));
-          });
+        });
     }
 
-    if(view.isCppObject)
-    {
+    if (view.isCppObject) {
         view.vars.forEach((varSchemaView) => {
             models.push(...collectAllModels(varSchemaView));
-          });
+        });
 
-        if(!view.ignoreModel)
+        if (!view.ignoreModel)
             models.push(view);
     }
-    else if(view.isMessage)
-    {
-        if(view.headers)
+    else if (view.isMessage) {
+        if (view.headers)
             models.push(...collectAllModels(view.headers));
 
-        if(view.payload)
+        if (view.payload)
             models.push(...collectAllModels(view.payload));
 
         models.push(view);
@@ -296,7 +292,7 @@ export function getMessageView(message) {
     messageView.examples = message.examples();
     messageView.classname = toCppValidPascalCase(message.name());
     messageView.messageClassname = messageView.classname;
-    messageView.isMessage = true;    
+    messageView.isMessage = true;
 
     if (message.hasHeaders()) {
         messageView.headers = getSchemaView(null, message.headers());
@@ -317,7 +313,7 @@ export function getTopicView(channel) {
 
     topicView.id = channel.id();
     topicView.name = channel.id();
-    topicView.classname = toCppValidPascalCase(channel.id());;
+    topicView.classname = toCppValidPascalCase(channel.id() + 'Topic');;
     topicView.topicClassName = topicView.classname;
     topicView.description = channel.description();
 
@@ -325,7 +321,8 @@ export function getTopicView(channel) {
 
     for (const operation of channel.operations()) {
         for (const message of operation.messages()) {
-            //TODO: this doesn't take into account that messages may be repeated across operations
+
+            // Messages are repeated across operations, we will "merge" them here
             const messageView = getMessageView(message);
             if (operation.isSend())
                 messageView.isSend = true;
@@ -333,9 +330,100 @@ export function getTopicView(channel) {
             if (operation.isReceive())
                 messageView.isReceive = true;
 
-            topicView.operations.push(messageView);
+            // match messages by classname as this should always be unique 
+            const foundOp = topicView.operations.find((opView) => { return opView?.classname === messageView.classname });
+            if (foundOp) {
+                foundOp.isSend = foundOp.isSend || messageView.isSend;
+                foundOp.isReceive = foundOp.isReceive || messageView.isReceive;
+            }
+            else {
+                topicView.operations.push(messageView);
+            }
         }
     }
 
     return topicView;
+}
+
+export function generateFiles(asyncapi, params, bIsPublic) {
+
+    let generatedFiles = [];
+
+    const view = initView({ asyncapi, params });
+    const modelNamePrefix = view.modelNamePrefix;
+    const unrealModuleName = view.unrealModuleName;
+
+    const cppSuffix = bIsPublic ? 'h' : 'cpp';
+    const templateSuffix = bIsPublic ? 'header' : 'source';
+
+    if (bIsPublic) {
+        const helperFiles = [
+            <File name={`${modelNamePrefix}BaseModel.h`}>
+                <Mustache template="model-base-header" data={view} />
+            </File>,
+            <File name={`${modelNamePrefix}Helpers.h`}>
+                <Mustache template="helpers-header" data={view} />
+            </File>
+        ];
+
+        generatedFiles.push(...helperFiles);
+    }
+    else {
+        const helperFiles = [
+            <File name={`${modelNamePrefix}Helpers.cpp`}>
+                <Mustache template="helpers-source" data={view} />
+            </File>
+        ];
+
+        generatedFiles.push(...helperFiles);
+
+        let projectFiles = []
+        if (params.buildProjectFiles) {
+            // only include if it's in the parameters
+            projectFiles = [
+                <File name={`${unrealModuleName}Module.h`}>
+                    <Mustache template="module-header" data={view} />
+                </File>,
+                <File name={`${unrealModuleName}Module.cpp`}>
+                    <Mustache template="module-source" data={view} />
+                </File>
+            ];
+        }
+
+        generatedFiles.push(...projectFiles);
+    }
+
+    let messageFiles = []
+    asyncapi.allMessages().forEach((message) => {
+        const messageView = getMessageView(message);
+        const fullView = { ...view, models: collectAllModels(messageView) };
+        fullView.filename = modelNamePrefix + messageView.classname;
+
+        messageFiles.push(
+            <File name={`${fullView.filename}.${cppSuffix}`}>
+                <Mustache template={`model-${templateSuffix}`} data={fullView} />
+            </File>
+        );
+    });
+
+    generatedFiles.push(...messageFiles);
+
+    let topicFiles = []
+    asyncapi.allChannels().forEach((channel) => {
+        const topicView = getTopicView(channel);
+        const fullView = { ...view, ...topicView };
+
+        // We need to disambiguate messages and topics having the same name, this suffix should do it
+        fullView.filename = modelNamePrefix + topicView.topicClassName;
+
+        topicFiles.push(
+            <File name={`${fullView.filename}.${cppSuffix}`}>
+                <Mustache template={`topic-${templateSuffix}`} data={fullView} />
+            </File>
+        );
+    });
+
+    generatedFiles.push(...topicFiles);
+
+    return generatedFiles;
 }
