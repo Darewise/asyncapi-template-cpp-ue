@@ -2,7 +2,8 @@
 #pragma once
 
 #include "{{modelNamePrefix}}BaseModel.h"
-{{#imports}}{{{import}}}
+{{#imports}}
+#include "{{modelNamePrefix}}{{{.}}}.h"
 {{/imports}}
 
 {{#cppNamespaceDeclarations}}

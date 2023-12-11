@@ -141,14 +141,15 @@ function makeContextualTypeName(schemaView, contextId) {
 }
 
 function getSchemaView(id, schema) {
-    //TODO: handle includes ! there is dependencies()
-    if (schema.dependencies()) {
-        console.log(`dependency found : ${schema.dependencies()}`);
-    }
-
     const schemaView = {}
     schemaView.asyncapi_schema = schema;
     schemaView.asyncapi_id = id;
+
+    // Named schemas are considered imports
+    // Note that dependencies() does not actually reflect "imports", and there does not seem to be a better way
+    if (!schema.id().startsWith('<anonymous')) {
+        schemaView.isImport = true;
+    }
 
     if (id) {
         schemaView.id = id;
@@ -184,12 +185,15 @@ function getSchemaView(id, schema) {
     }
     else if (schema.type() == 'object') // object type that doesn't have properties
     {
-        if (schema.additionalProperties()) {
-            // No properties but additional Properties = map
-            // https://swagger.io/docs/specification/data-models/dictionaries/
-
+        // No properties but additional Properties = map
+        // https://swagger.io/docs/specification/data-models/dictionaries/
+        if (!schema.additionalProperties() || schema.additionalProperties() == true) {
+            schemaView.datatype = toUnrealType('object');
+        }
+        else // schema.additionalProperties() is SchemaInterface
+        {
             if (schema.additionalProperties() == true) // we can't tell what is in here
-                schemaView.datatype = 'TMap<FString, FJsonValue>';
+                schemaView.datatype = toUnrealType('object');
             else {
                 const valueSchemaView = getSchemaView(null, schema.additionalProperties());
                 makeContextualTypeName(valueSchemaView, id);
@@ -197,10 +201,6 @@ function getSchemaView(id, schema) {
                 schemaView.models = [valueSchemaView];
             }
             schemaView.isMap = true;
-        }
-        else // object treated as primitive type by default
-        {
-            schemaView.datatype = toUnrealType(schema.type(), schema.format());
         }
     }
     else if (schema.type() == 'array') // container type
@@ -250,20 +250,24 @@ function getSchemaView(id, schema) {
     return schemaView;
 }
 
-export function collectAllModels(view) {
+function collectAllModels(view) {
     // Not super proud of this design but essentially we first constructed a massive tree of schemas, 
     // now we parse it again to pull all the models back to the top list that we will later generate.
     const models = []
 
     if (view.models) {
         view.models.forEach((varSchemaView) => {
-            models.push(...collectAllModels(varSchemaView));
+            if (!varSchemaView.isImport) {
+                models.push(...collectAllModels(varSchemaView));
+            }
         });
     }
 
     if (view.isCppObject) {
         view.vars.forEach((varSchemaView) => {
-            models.push(...collectAllModels(varSchemaView));
+            if (!varSchemaView.isImport) {
+                models.push(...collectAllModels(varSchemaView));
+            }
         });
 
         if (!view.ignoreModel)
@@ -282,7 +286,47 @@ export function collectAllModels(view) {
     return models;
 }
 
-export function getMessageView(message) {
+function collectAllImports(view, modelNamePrefix) {
+    // Not super proud of this design but essentially we first constructed a massive tree of schemas, 
+    // now we parse it again to pull all the models back to the top list that we will later generate.
+    const imports = []
+
+    if (view.models) {
+        view.models.forEach((varSchemaView) => {
+            if (varSchemaView.isImport) {
+                if (!imports.includes(varSchemaView.classname))
+                    imports.push(varSchemaView.classname);
+            }
+            else {
+                imports.push(...collectAllImports(varSchemaView, modelNamePrefix));
+            }
+        });
+    }
+
+    if (view.isCppObject) {
+        view.vars.forEach((varSchemaView) => {
+            if (varSchemaView.isImport) {
+                if (!imports.includes(varSchemaView.classname))
+                    imports.push(varSchemaView.classname);
+            }
+            else {
+                imports.push(...collectAllImports(varSchemaView, modelNamePrefix));
+            }
+        });
+    }
+    else if (view.isMessage) {
+        if (view.headers)
+            imports.push(...collectAllImports(view.headers, modelNamePrefix));
+
+        if (view.payload)
+            imports.push(...collectAllImports(view.payload, modelNamePrefix));
+
+    }
+
+    return imports;
+}
+
+function getMessageView(message) {
     const messageView = {};
     messageView.asyncapi_message = message;
 
@@ -307,7 +351,7 @@ export function getMessageView(message) {
     return messageView;
 }
 
-export function getTopicView(channel) {
+function getTopicView(channel) {
     const topicView = {};
     topicView.asyncapi_channel = channel;
 
@@ -393,10 +437,26 @@ export function generateFiles(asyncapi, params, bIsPublic) {
         generatedFiles.push(...projectFiles);
     }
 
+    // Process hopefully named schemas
+    let schemaFiles = []
+    asyncapi.components()?.schemas()?.forEach((schema) => {
+        const schemaView = getSchemaView(schema.id(), schema);
+        const fullView = { ...view, models: collectAllModels(schemaView), imports: collectAllImports(schemaView) };
+        fullView.filename = modelNamePrefix + schemaView.classname;
+
+        schemaFiles.push(
+            <File name={`${fullView.filename}.${cppSuffix}`}>
+                <Mustache template={`model-${templateSuffix}`} data={fullView} />
+            </File>
+        );
+    });
+
+    generatedFiles.push(...schemaFiles);
+
     let messageFiles = []
     asyncapi.allMessages().forEach((message) => {
         const messageView = getMessageView(message);
-        const fullView = { ...view, models: collectAllModels(messageView) };
+        const fullView = { ...view, models: collectAllModels(messageView), imports: collectAllImports(messageView) };
         fullView.filename = modelNamePrefix + messageView.classname;
 
         messageFiles.push(

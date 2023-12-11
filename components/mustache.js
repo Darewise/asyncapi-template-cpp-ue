@@ -1,4 +1,3 @@
-
 import { Text, Indent } from '@asyncapi/generator-react-sdk';
 
 function findMustacheDir(inputPath) {
@@ -28,14 +27,8 @@ function getMustacheTemplatePath(templateFileName) {
         templateFileName += '.mustache';
     }
 
-    if (!templateFileName.startsWith('mustache/')) {
-        templateFileName = 'mustache/' + templateFileName;
-    }
-
     const path = require('path');
-    const root = findMustacheDir(__dirname);
-    const test = path.join(root, templateFileName);
-    return test;
+    return path.join(findMustacheDir(__dirname), 'mustache', templateFileName);
 }
 
 export function Mustache({ template, data }) {
@@ -43,7 +36,7 @@ export function Mustache({ template, data }) {
     const mustache = require('mustache');
 
     // Register the partial template
-    const subTemplate = fs.readFileSync(getMustacheTemplatePath('mustache/licenseinfo.mustache'), 'utf8');
+    const subTemplate = fs.readFileSync(getMustacheTemplatePath('licenseinfo.mustache'), 'utf8');
     const partials = {};
     partials.licenseInfo = subTemplate;
 
